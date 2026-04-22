@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import AppLayout from "@/components/AppLayout";
-import { getTrabajadores, setTrabajadores, getHistorial, setHistorial, newId } from "@/lib/rrhh/storage";
+import { getTrabajadores, setTrabajadores, getHistorial, setHistorial, newId, syncFromConvex } from "@/lib/rrhh/storage";
 import type { Worker } from "@/lib/rrhh/types";
 import { AFP_OPTIONS, SALUD_OPTIONS } from "@/lib/rrhh/types";
 import { Pencil, Trash2, UserPlus, Upload, Download } from "lucide-react";
@@ -23,7 +23,12 @@ export default function TrabajadoresPage() {
   const [showImport, setShowImport] = useState(false);
   const [importText, setImportText] = useState("");
 
-  useEffect(() => { setWorkers(getTrabajadores()); }, []);
+  useEffect(() => {
+    syncFromConvex().then(r => {
+      setWorkers(getTrabajadores());
+      if (r.workers) toast.success('Trabajadores restaurados desde la nube ☁️');
+    });
+  }, []);
 
   function abrirNuevo() {
     setModal({ id: '', ...EMPTY });

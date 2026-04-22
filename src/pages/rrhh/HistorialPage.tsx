@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import AppLayout from "@/components/AppLayout";
-import { getHistorial, setHistorial } from "@/lib/rrhh/storage";
+import { getHistorial, setHistorial, syncFromConvex } from "@/lib/rrhh/storage";
 import { fmt, DIAS_BASE_MES } from "@/lib/rrhh/calculations";
 import type { LiquidacionResult } from "@/lib/rrhh/types";
 import { MESES } from "@/lib/rrhh/types";
@@ -15,7 +15,10 @@ export default function HistorialPage() {
   const [selected, setSelected] = useState<LiquidacionResult | null>(null);
 
   useEffect(() => {
-    setH(getHistorial().reverse());
+    syncFromConvex().then(r => {
+      setH(getHistorial().reverse());
+      if (r.historial) toast.success('Historial restaurado desde la nube ☁️');
+    });
   }, []);
 
   function eliminar(id: string) {
