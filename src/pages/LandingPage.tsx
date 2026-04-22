@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { Phone, Mail, MapPin, Sparkles, CheckCircle, Clock, Users, Star } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
@@ -230,7 +231,7 @@ function ContactForm() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(false);
