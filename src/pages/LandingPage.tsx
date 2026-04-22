@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Phone, Mail, MapPin, Sparkles, CheckCircle, Clock, Users, Star } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
@@ -161,7 +162,6 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="grid md:grid-cols-2 gap-12 items-start">
-            {/* Info */}
             <div className="space-y-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center text-sky-600">
@@ -200,7 +200,6 @@ export default function LandingPage() {
                 </Button>
               </a>
             </div>
-            {/* Formulario */}
             <ContactForm />
           </div>
         </div>
@@ -224,12 +223,12 @@ export default function LandingPage() {
 }
 
 function ContactForm() {
-  const [sent, setSent] = (useState as typeof useState<boolean>)(false);
-  const [error, setError] = (useState as typeof useState<boolean>)(false);
-  const [loading, setLoading] = (useState as typeof useState<boolean>)(false);
-  const [name, setName] = (useState as typeof useState<string>)("");
-  const [email, setEmail] = (useState as typeof useState<string>)("");
-  const [message, setMessage] = (useState as typeof useState<string>)("");
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -305,5 +304,3 @@ function ContactForm() {
     </form>
   );
 }
-
-import { useState } from "react";

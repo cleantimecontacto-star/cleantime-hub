@@ -32,11 +32,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 /** Ruta raíz: muestra landing si no autenticado, dashboard si autenticado */
 function HomeRoute() {
   const { isAuthenticated } = useAuth();
-  useServiceWorker();
   return isAuthenticated ? <Dashboard /> : <LandingPage />;
 }
 
 export default function App() {
+  useServiceWorker();
   return (
     <DefaultProviders>
       <BrowserRouter>
