@@ -67,6 +67,6 @@ export function setHistorial(arr: LiquidacionResult[]): void {
 }
 
 export function newId(prefix = ''): string {
-  if (window.crypto?.randomUUID) return (prefix ? `${prefix}_` : '') + crypto.randomUUID();
+  if (window.crypto?.randomUUID != null) return (prefix ? `${prefix}_` : '') + crypto.randomUUID();
   return (prefix ? `${prefix}_` : '') + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
 }
