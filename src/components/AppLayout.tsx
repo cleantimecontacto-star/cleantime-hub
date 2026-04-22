@@ -39,14 +39,14 @@ type NavItem = {
 
 const OPS_NAV: NavItem[] = [
   { label: "Inicio",        icon: <LayoutDashboard size={20} />, path: "/" },
-  { label: "Nueva",         icon: <FilePlus size={20} />,        path: "/cotizacion/nueva" },
+  { label: "Nueva",         icon: <FilePlus size={20} />,        path: "/cotizaciones/nueva" },
   { label: "Cotizaciones",  icon: <FileText size={20} />,        path: "/cotizaciones" },
   { label: "Clientes",      icon: <Users size={20} />,           path: "/clientes" },
   { label: "Trabajadores",  icon: <HardHat size={20} />,         path: "/trabajadores" },
   { label: "Gastos",        icon: <Receipt size={20} />,         path: "/gastos" },
   { label: "Documentos",    icon: <FolderOpen size={20} />,      path: "/documentos" },
   { label: "Exportar",      icon: <Download size={20} />,        path: "/exportar" },
-  { label: "Configuración", icon: <Settings size={20} />,        path: "/configuracion" },
+  { label: "Configuración", icon: <Settings size={20} />,        path: "/config" },
 ];
 
 const RRHH_NAV: NavItem[] = [
