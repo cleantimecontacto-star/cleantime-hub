@@ -153,7 +153,7 @@ export default function AppLayout({ children, title, headerRight, module: mod }:
             <span>{theme === "dark" ? "Modo claro" : "Modo oscuro"}</span>
           </button>
           <button
-            onClick={() => { if (window.confirm("¿Cerrar sesión?")) logout(); }}
+            onClick={() => logout()}
             className="flex items-center gap-2 text-gray-400 hover:text-red-400 text-xs transition-colors w-full"
           >
             <LogOut size={16} />
@@ -195,7 +195,7 @@ export default function AppLayout({ children, title, headerRight, module: mod }:
               {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <button
-              onClick={() => { if (window.confirm("¿Cerrar sesión?")) logout(); }}
+              onClick={() => logout()}
               className="md:hidden p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-muted transition-colors"
             >
               <LogOut size={18} />
