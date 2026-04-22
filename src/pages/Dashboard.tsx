@@ -127,7 +127,7 @@ export default function Dashboard() {
 
   return (
     <AppLayout title="Panel" headerRight={
-      <button onClick={() => navigate("/cotizacion/nueva")} className="flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded text-xs font-medium">
+      <button onClick={() => navigate("/cotizaciones/nueva")} className="flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded text-xs font-medium">
         <FilePlus size={13} /> Nueva
       </button>
     }>

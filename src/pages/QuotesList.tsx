@@ -52,7 +52,7 @@ export default function QuotesList() {
     if (WARN_ON_EDIT_STATUSES.includes(quote.status)) {
       setEditTarget({ id: quote._id, number: quote.number, status: quote.status });
     } else {
-      navigate(`/cotizacion/${quote._id}/editar`);
+      navigate(`/cotizaciones/${quote._id}`);
     }
   };
 
@@ -130,7 +130,7 @@ export default function QuotesList() {
 
   return (
     <AppLayout title="Cotizaciones" headerRight={
-      <button onClick={() => navigate("/cotizacion/nueva")} className="flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded text-xs font-medium">
+      <button onClick={() => navigate("/cotizaciones/nueva")} className="flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded text-xs font-medium">
         <Plus size={13} /> Nueva
       </button>
     }>
@@ -160,7 +160,7 @@ export default function QuotesList() {
         {quotes !== undefined && filtered.length === 0 && quotes.length === 0 && (
           <div className="text-center py-12">
             <p className="text-sm text-muted-foreground mb-3">Aún no hay cotizaciones</p>
-            <button onClick={() => navigate("/cotizacion/nueva")} className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium mx-auto">
+            <button onClick={() => navigate("/cotizaciones/nueva")} className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium mx-auto">
               <Plus size={15} /> Crear primera cotización
             </button>
           </div>
@@ -235,7 +235,7 @@ export default function QuotesList() {
       <EditConfirmDialog
         open={!!editTarget}
         onClose={() => setEditTarget(null)}
-        onConfirm={() => navigate(`/cotizacion/${editTarget!.id}/editar`)}
+        onConfirm={() => navigate(`/cotizaciones/${editTarget!.id}`)}
         title={`¿Editar cotización ${editTarget?.number ?? ""}?`}
         description={`Esta cotización ya fue ${editTarget?.status === "Facturada" ? "facturada" : editTarget?.status === "Aprobada" ? "aprobada" : "enviada al cliente"}. Editar puede afectar el historial. ¿Deseas continuar de todas formas?`}
       />
