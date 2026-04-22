@@ -13,7 +13,6 @@ import ConfigPage from "./pages/ConfigPage.tsx";
 import ChangeStatusPage from "./pages/ChangeStatusPage.tsx";
 import DocumentsPage from "./pages/DocumentsPage.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
-import LandingPage from "./pages/LandingPage.tsx";
 import { useAuth } from "./auth/AuthContext.tsx";
 import { useServiceWorker } from "@/hooks/use-service-worker.ts";
 
@@ -29,10 +28,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-/** Ruta raíz: muestra landing si no autenticado, dashboard si autenticado */
+/** Ruta raíz: redirige al login si no autenticado, muestra dashboard si autenticado */
 function HomeRoute() {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <Dashboard /> : <LandingPage />;
+  return isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />;
 }
 
 export default function App() {
@@ -41,7 +40,7 @@ export default function App() {
     <DefaultProviders>
       <BrowserRouter>
         <Routes>
-          {/* Pública - landing / dashboard según sesión */}
+          {/* Raíz: dashboard si autenticado, login si no */}
           <Route path="/" element={<HomeRoute />} />
 
           {/* Login */}
