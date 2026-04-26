@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog.tsx";
-import { useQuery, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
+import { useQuery } from "@/hooks/use-cached-query";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import AppLayout from "@/components/AppLayout";

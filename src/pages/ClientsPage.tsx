@@ -1,4 +1,5 @@
-import { useQuery, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
+import { useQuery } from "@/hooks/use-cached-query";
 import { api } from "@/convex/_generated/api.js";
 import { useState } from "react";
 import AppLayout from "@/components/AppLayout.tsx";

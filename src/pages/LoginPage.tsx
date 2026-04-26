@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/auth/AuthContext.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { useQuery } from "convex/react";
+import { useQuery } from "@/hooks/use-cached-query";
 import { api } from "@/convex/_generated/api.js";
 import { Eye, EyeOff } from "lucide-react";
 

@@ -1,5 +1,5 @@
 import { type ReactNode, useState } from "react";
-import { useQuery } from "convex/react";
+import { useQuery } from "@/hooks/use-cached-query";
 import { api } from "@/convex/_generated/api.js";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
