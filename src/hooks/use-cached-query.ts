@@ -1,6 +1,7 @@
 import { useQuery as convexUseQuery } from "convex/react";
 import { getFunctionName } from "convex/server";
 import { useEffect, useRef } from "react";
+import { notifyQuerySuccess, notifyOffline } from "@/lib/syncStatus";
 
 const PREFIX = "ctq:";
 const MAX_BYTES = 200_000;
@@ -66,6 +67,7 @@ export function useQuery(query: unknown, args?: unknown): unknown {
 
   useEffect(() => {
     if (live === undefined || args === "skip") return;
+    notifyQuerySuccess();
     try {
       const serialized = JSON.stringify(live);
       if (serialized === lastSavedRef.current) return;
@@ -78,5 +80,6 @@ export function useQuery(query: unknown, args?: unknown): unknown {
 
   if (live !== undefined) return live;
   if (args === "skip") return undefined;
+  if (typeof navigator !== "undefined" && !navigator.onLine) notifyOffline();
   return readCache(key);
 }
