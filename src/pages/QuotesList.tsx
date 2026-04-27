@@ -8,7 +8,7 @@ import { formatCLP, formatDate, STATUS_COLORS, STATUS_BADGE_COLORS, QUOTE_STATUS
 import { cn } from "@/lib/utils.ts";
 import { Input } from "@/components/ui/input.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select.tsx";
-import { MoreVertical, Plus, Download, Pencil, Trash2, Copy, MessageCircle } from "lucide-react";
+import { MoreVertical, Plus, Download, Pencil, Trash2, Copy, MessageCircle, Eye } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { toast } from "sonner";
@@ -16,6 +16,7 @@ import { generateQuotePDF } from "@/lib/pdf.ts";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog.tsx";
 import { EditConfirmDialog } from "@/components/ui/edit-confirm-dialog.tsx";
 import type { Id } from "@/convex/_generated/dataModel.d.ts";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx";
 
 const PAYMENT_STATUS_LEGACY: Record<string, string> = {
   "pendiente": "Sin pagar",
@@ -70,6 +71,8 @@ export default function QuotesList() {
     }
     return list;
   }, [quotes, filterStatus, search]);
+
+  const [previewQuote, setPreviewQuote] = useState<typeof filtered[0] | null>(null);
 
   const handleDeleteClick = (quote: { _id: Id<"quotes">; number: string; status: string }) => {
     setDeleteTarget({ id: quote._id, number: quote.number, status: quote.status });
@@ -198,6 +201,13 @@ export default function QuotesList() {
               <div className="text-right shrink-0">
                 <p className="text-sm font-bold">{formatCLP(quote.total ?? quote.subtotal * 1.19)}</p>
               </div>
+              <button
+                onClick={() => setPreviewQuote(quote)}
+                className="p-1.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
+                title="Ver cotización"
+              >
+                <Eye className="h-3.5 w-3.5" />
+              </button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center justify-center w-7 h-7 rounded border border-border bg-muted shrink-0">
@@ -249,6 +259,88 @@ export default function QuotesList() {
         description={`Estás a punto de eliminar la cotización ${deleteTarget?.number ?? ""}. Esta acción borrará también todos los trabajos y gastos asociados. No se puede deshacer.`}
         requireWord="ELIMINAR"
       />
+
+      <Dialog open={previewQuote !== null} onOpenChange={(o) => { if (!o) setPreviewQuote(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span>{previewQuote?.number}</span>
+              {previewQuote && (
+                <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium", STATUS_BADGE_COLORS[previewQuote.status as QuoteStatus])}>
+                  {previewQuote.status}
+                </span>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          {previewQuote && (
+            <div className="space-y-3 text-sm">
+              {/* Fecha */}
+              <div className="flex justify-between text-muted-foreground">
+                <span>Fecha</span>
+                <span className="text-foreground">{formatDate(previewQuote.date)}</span>
+              </div>
+              {/* Cliente */}
+              <div className="rounded-lg bg-muted/40 p-3 space-y-1">
+                <p className="font-medium text-foreground">{previewQuote.clientName}</p>
+                {previewQuote.projectName && <p className="text-muted-foreground">📁 {previewQuote.projectName}</p>}
+                {previewQuote.otNumber && <p className="text-muted-foreground">OT: {previewQuote.otNumber}</p>}
+              </div>
+              {/* Servicio */}
+              <div className="rounded-lg bg-muted/40 p-3 space-y-1">
+                <p className="font-medium text-foreground">{previewQuote.serviceType}</p>
+                <p className="text-muted-foreground">{previewQuote.squareMeters} {previewQuote.unit ?? 'm²'} · ${previewQuote.pricePerM2.toLocaleString('es-CL')} x {previewQuote.unit ?? 'm²'}</p>
+                {previewQuote.description && <p className="text-muted-foreground">{previewQuote.description}</p>}
+              </div>
+              {/* Factura / pago */}
+              {(previewQuote.invoiceNumber || previewQuote.paymentStatus) && (
+                <div className="flex gap-2 flex-wrap">
+                  {previewQuote.invoiceNumber && (
+                    <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">FAC: {previewQuote.invoiceNumber}</span>
+                  )}
+                  {previewQuote.paymentStatus && (
+                    <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">{previewQuote.paymentStatus}</span>
+                  )}
+                </div>
+              )}
+              {/* Totales */}
+              <div className="border-t border-border pt-3 space-y-1">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Subtotal</span>
+                  <span>{formatCLP(previewQuote.subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-muted-foreground">
+                  <span>IVA (19%)</span>
+                  <span>{formatCLP(previewQuote.iva ?? previewQuote.subtotal * 0.19)}</span>
+                </div>
+                <div className="flex justify-between font-semibold text-foreground">
+                  <span>Total</span>
+                  <span>{formatCLP(previewQuote.total ?? previewQuote.subtotal * 1.19)}</span>
+                </div>
+              </div>
+              {/* Términos */}
+              {previewQuote.terms && (
+                <p className="text-xs text-muted-foreground border-t border-border pt-2">{previewQuote.terms}</p>
+              )}
+              {/* Acciones */}
+              <div className="flex gap-2 justify-end pt-2">
+                <button
+                  onClick={() => handleDownloadPDF(previewQuote)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-xs font-medium"
+                >
+                  <Download className="h-3 w-3" />
+                  PDF
+                </button>
+                <button
+                  onClick={() => setPreviewQuote(null)}
+                  className="px-3 py-1.5 border border-border rounded-md text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
