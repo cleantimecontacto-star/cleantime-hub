@@ -22,7 +22,8 @@ function buildKey(query: unknown, args: unknown): string {
   return `${PREFIX}${name}:${argsStr}`;
 }
 
-function readCache(key: string): unknown | undefined {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function readCache(key: string): any {
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return undefined;
@@ -54,10 +55,12 @@ function writeCache(key: string, data: unknown) {
  * Uso idéntico a `useQuery` de `convex/react`:
  *   const data = useQuery(api.foo.bar, { x: 1 });
  */
-export function useQuery(query: unknown, args?: unknown): unknown {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function useQuery(query: unknown, args?: unknown): any {
   // Tipado relajado: convexUseQuery acepta una FunctionReference,
   // pero queremos exportar la misma firma flexible que el original.
-  const live = (convexUseQuery as unknown as (q: unknown, a: unknown) => unknown)(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const live = (convexUseQuery as unknown as (q: unknown, a: unknown) => any)(
     query,
     args,
   );
