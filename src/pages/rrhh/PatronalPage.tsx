@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import type { ReactNode } from "react";
 import AppLayout from "@/components/AppLayout";
 import { getTrabajadores, getHistorial } from "@/lib/rrhh/storage";
 import { fmt, DIAS_BASE_MES, TASAS_TRAB, TASAS_PAT } from "@/lib/rrhh/calculations";
@@ -30,7 +31,7 @@ export default function PatronalPage() {
     h.mes === mes && h.anio === anio
   );
 
-  let contenido = null;
+  let contenido: ReactNode = null;
   if (entrada) {
     const { base, afpNombre, afpTasa, saludNombre, saludTasa, diasTrabajados, colacion, movilizacion } = entrada;
     const afpOblig   = Math.round(base * parseFloat(afpTasa) / 100);

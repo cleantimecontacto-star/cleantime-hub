@@ -14,8 +14,10 @@ export const listWithProject = query({
     const quotes = await ctx.db.query("quotes").order("desc").collect();
     return await Promise.all(
       quotes.map(async (q) => {
-        let projectInfo = null;
-        let clientInfo = null;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let projectInfo: any = null;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let clientInfo: any = null;
         if (q.projectId) {
           const project = await ctx.db.get(q.projectId);
           if (project) {
