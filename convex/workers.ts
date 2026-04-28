@@ -4,8 +4,11 @@ import { mutation, query } from "./_generated/server";
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const all = await ctx.db.query("workers").order("asc").collect();
-    return all.filter((w) => !w.deletedAt);
+    return await ctx.db
+      .query("workers")
+      .withIndex("by_deletedAt", (q) => q.eq("deletedAt", undefined))
+      .order("asc")
+      .collect();
   },
 });
 
@@ -53,19 +56,22 @@ export const remove = mutation({
 export const listJobs = query({
   args: { workerId: v.id("workers") },
   handler: async (ctx, args) => {
-    const all = await ctx.db
+    return await ctx.db
       .query("workerJobs")
       .withIndex("by_worker", (q) => q.eq("workerId", args.workerId))
+      .filter((q) => q.eq(q.field("deletedAt"), undefined))
       .collect();
-    return all.filter((j) => !j.deletedAt);
   },
 });
 
 export const allJobs = query({
   args: {},
   handler: async (ctx) => {
-    const all = await ctx.db.query("workerJobs").order("desc").collect();
-    return all.filter((j) => !j.deletedAt);
+    return await ctx.db
+      .query("workerJobs")
+      .withIndex("by_deletedAt", (q) => q.eq("deletedAt", undefined))
+      .order("desc")
+      .collect();
   },
 });
 
