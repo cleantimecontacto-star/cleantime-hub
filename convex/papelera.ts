@@ -26,122 +26,44 @@ export const list = query({
       fecha: number;
     }> = [];
 
-    try {
-      // Usamos índices para buscar solo los elementos que tienen deletedAt definido
-      // Esto es mucho más eficiente que escanear toda la tabla
-      
-      const clients = await ctx.db
-        .query("clients")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
-        .collect();
-      for (const c of clients) {
-        if (c.deletedAt) {
-          out.push({
-            pid: `cliente:${c._id}`,
-            tipo: "cliente",
-            resumen: c.name || "(sin nombre)",
-            fecha: c.deletedAt,
-          });
-        }
-      }
+    // Definimos las tablas y cómo obtener su resumen
+    const tables: Array<{ name: any; tipo: PapeleraTipo; getResumen: (doc: any) => string }> = [
+      { name: "clients", tipo: "cliente", getResumen: (doc) => doc.name || "(sin nombre)" },
+      { name: "projects", tipo: "proyecto", getResumen: (doc) => doc.name || "(sin nombre)" },
+      { name: "quotes", tipo: "cotizacion", getResumen: (doc) => `${doc.number} — ${doc.clientName}` },
+      { name: "workers", tipo: "trabajador", getResumen: (doc) => doc.name || "(sin nombre)" },
+      { name: "workerJobs", tipo: "trabajo", getResumen: (doc) => `${doc.description} (${doc.date})` },
+      { name: "expenses", tipo: "gasto", getResumen: (doc) => `${doc.category} — ${doc.description}` },
+      { name: "documents", tipo: "documento", getResumen: (doc) => doc.name || "(sin nombre)" },
+    ];
 
-      const projects = await ctx.db
-        .query("projects")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
-        .collect();
-      for (const p of projects) {
-        if (p.deletedAt) {
-          out.push({
-            pid: `proyecto:${p._id}`,
-            tipo: "proyecto",
-            resumen: p.name || "(sin nombre)",
-            fecha: p.deletedAt,
-          });
-        }
-      }
+    // Procesamos cada tabla de forma independiente y con captura de errores individual
+    for (const table of tables) {
+      try {
+        const items = await ctx.db
+          .query(table.name)
+          .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
+          .collect();
 
-      const quotes = await ctx.db
-        .query("quotes")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
-        .collect();
-      for (const q of quotes) {
-        if (q.deletedAt) {
-          out.push({
-            pid: `cotizacion:${q._id}`,
-            tipo: "cotizacion",
-            resumen: `${q.number} — ${q.clientName}`,
-            fecha: q.deletedAt,
-          });
+        for (const item of items) {
+          if (item.deletedAt) {
+            out.push({
+              pid: `${table.tipo}:${item._id}`,
+              tipo: table.tipo,
+              resumen: table.getResumen(item),
+              fecha: item.deletedAt,
+            });
+          }
         }
+      } catch (err) {
+        // Si una tabla falla (por ejemplo, por no tener índice aún o ser muy grande),
+        // registramos el error pero permitimos que las demás sigan funcionando.
+        console.error(`Error consultando tabla ${table.name} en papelera:`, err);
       }
-
-      const workers = await ctx.db
-        .query("workers")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
-        .collect();
-      for (const w of workers) {
-        if (w.deletedAt) {
-          out.push({
-            pid: `trabajador:${w._id}`,
-            tipo: "trabajador",
-            resumen: w.name || "(sin nombre)",
-            fecha: w.deletedAt,
-          });
-        }
-      }
-
-      const jobs = await ctx.db
-        .query("workerJobs")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
-        .collect();
-      for (const j of jobs) {
-        if (j.deletedAt) {
-          out.push({
-            pid: `trabajo:${j._id}`,
-            tipo: "trabajo",
-            resumen: `${j.description} (${j.date})`,
-            fecha: j.deletedAt,
-          });
-        }
-      }
-
-      const expenses = await ctx.db
-        .query("expenses")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
-        .collect();
-      for (const e of expenses) {
-        if (e.deletedAt) {
-          out.push({
-            pid: `gasto:${e._id}`,
-            tipo: "gasto",
-            resumen: `${e.category} — ${e.description}`,
-            fecha: e.deletedAt,
-          });
-        }
-      }
-
-      const docs = await ctx.db
-        .query("documents")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
-        .collect();
-      for (const d of docs) {
-        if (d.deletedAt) {
-          out.push({
-            pid: `documento:${d._id}`,
-            tipo: "documento",
-            resumen: d.name || "(sin nombre)",
-            fecha: d.deletedAt,
-          });
-        }
-      }
-
-      out.sort((a, b) => b.fecha - a.fecha);
-    } catch (err) {
-      console.error("Error en papelera.list:", err);
-      // Retornar lo que se haya podido recolectar hasta el error
     }
 
-    return out;
+    // Ordenar por fecha de eliminación (más reciente primero)
+    return out.sort((a, b) => b.fecha - a.fecha);
   },
 });
 
@@ -197,27 +119,31 @@ export const restoreDocument = mutation({
 export const purgeClient = mutation({
   args: { id: v.id("clients") },
   handler: async (ctx, args) => {
-    // Hard cascade
+    // Hard cascade: Borrado definitivo de proyectos, cotizaciones, trabajos y gastos asociados
     const projects = await ctx.db
       .query("projects")
       .withIndex("by_client", (q) => q.eq("clientId", args.id))
       .collect();
     for (const p of projects) await ctx.db.delete(p._id);
+
     const quotes = await ctx.db
       .query("quotes")
       .filter((q) => q.eq(q.field("clientId"), args.id))
       .collect();
+    
     for (const quote of quotes) {
       const jobs = await ctx.db
         .query("workerJobs")
         .withIndex("by_quote", (q) => q.eq("quoteId", quote._id))
         .collect();
       for (const j of jobs) await ctx.db.delete(j._id);
+
       const exps = await ctx.db
         .query("expenses")
         .withIndex("by_quote", (q) => q.eq("quoteId", quote._id))
         .collect();
       for (const e of exps) await ctx.db.delete(e._id);
+
       await ctx.db.delete(quote._id);
     }
     await ctx.db.delete(args.id);
@@ -239,11 +165,13 @@ export const purgeQuote = mutation({
       .withIndex("by_quote", (q) => q.eq("quoteId", args.id))
       .collect();
     for (const j of jobs) await ctx.db.delete(j._id);
+
     const exps = await ctx.db
       .query("expenses")
       .withIndex("by_quote", (q) => q.eq("quoteId", args.id))
       .collect();
     for (const e of exps) await ctx.db.delete(e._id);
+
     await ctx.db.delete(args.id);
   },
 });
@@ -277,7 +205,7 @@ export const purgeDocument = mutation({
       try {
         await ctx.storage.delete(doc.storageId);
       } catch {
-        // file may already be gone
+        // ignorar si el archivo ya no existe
       }
       await ctx.db.delete(args.id);
     }
@@ -288,78 +216,26 @@ export const purgeDocument = mutation({
 export const empty = mutation({
   args: {},
   handler: async (ctx) => {
-    try {
-      // Usar índices para encontrar elementos borrados y eliminarlos definitivamente
-      const clients = await ctx.db
-        .query("clients")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
-        .collect();
-      for (const c of clients) {
-        const projects = await ctx.db
-          .query("projects")
-          .withIndex("by_client", (q) => q.eq("clientId", c._id))
+    const tables = ["clients", "projects", "quotes", "workers", "workerJobs", "expenses", "documents"];
+    
+    for (const tableName of tables) {
+      try {
+        const items = await ctx.db
+          .query(tableName as any)
+          .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
           .collect();
-        for (const p of projects) {
-          await ctx.db.delete(p._id);
+
+        for (const item of items) {
+          if (tableName === "documents") {
+            try {
+              await ctx.storage.delete((item as any).storageId);
+            } catch {}
+          }
+          await ctx.db.delete(item._id);
         }
-        await ctx.db.delete(c._id);
+      } catch (err) {
+        console.error(`Error vaciando tabla ${tableName} en papelera:`, err);
       }
-
-      const projects = await ctx.db
-        .query("projects")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
-        .collect();
-      for (const p of projects) {
-        await ctx.db.delete(p._id);
-      }
-
-      const quotes = await ctx.db
-        .query("quotes")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
-        .collect();
-      for (const q of quotes) {
-        await ctx.db.delete(q._id);
-      }
-
-      const workers = await ctx.db
-        .query("workers")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
-        .collect();
-      for (const w of workers) {
-        await ctx.db.delete(w._id);
-      }
-
-      const jobs = await ctx.db
-        .query("workerJobs")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
-        .collect();
-      for (const j of jobs) {
-        await ctx.db.delete(j._id);
-      }
-
-      const expenses = await ctx.db
-        .query("expenses")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
-        .collect();
-      for (const e of expenses) {
-        await ctx.db.delete(e._id);
-      }
-
-      const docs = await ctx.db
-        .query("documents")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
-        .collect();
-      for (const d of docs) {
-        try {
-          await ctx.storage.delete(d.storageId);
-        } catch {
-          // ignore
-        }
-        await ctx.db.delete(d._id);
-      }
-    } catch (err) {
-      console.error("Error en papelera.empty:", err);
-      throw err;
     }
   },
 });
