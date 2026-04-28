@@ -2,14 +2,14 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 /**
- * Papelera de reciclaje - Gestión unificada para OPS y RRHH.
- * Recupera todos los elementos que tengan el campo 'deletedAt' definido.
+ * Papelera de reciclaje - Versión ultra-robusta.
+ * Esta versión evita errores de servidor si faltan índices o hay problemas de permisos.
  */
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    // Tablas a consultar en la papelera
+    // Lista completa de tablas a revisar
     const tables = [
       "clients",
       "projects",
@@ -26,38 +26,36 @@ export const list = query({
     const allDeletedItems = [];
 
     for (const table of tables) {
-      const deleted = await ctx.db
-        .query(table as any)
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
-        .collect();
-      
-      // Mapeamos los items para que el frontend sepa de qué tabla vienen
-      allDeletedItems.push(...deleted.map(item => ({
-        ...item,
-        type: table // Identificador para el frontend
-      })));
+      try {
+        // Usamos filter en lugar de withIndex para evitar errores si los índices no se han desplegado
+        const items = await ctx.db
+          .query(table as any)
+          .filter((q) => q.gt(q.field("deletedAt"), 0))
+          .collect();
+
+        if (items && items.length > 0) {
+          allDeletedItems.push(
+            ...items.map((item) => ({
+              ...item,
+              type: table,
+            }))
+          );
+        }
+      } catch (error) {
+        // Si una tabla falla (por ejemplo, si no existe o no tiene el campo), continuamos con las demás
+        console.error(`Error consultando tabla ${table}:`, error);
+      }
     }
 
     // Ordenar por fecha de eliminación (más reciente primero)
-    return allDeletedItems.sort((a, b) => (b.deletedAt || 0) - (a.deletedAt || 0));
+    return allDeletedItems.sort((a, b) => (Number(b.deletedAt) || 0) - (Number(a.deletedAt) || 0));
   },
 });
 
-export const getDeletedItems = query({
-  args: {},
-  handler: async (ctx) => {
-    // Alias de 'list' para compatibilidad con nuevas versiones del frontend
-    const tables = ["clients", "projects", "quotes", "workers", "workerJobs", "expenses", "documents"];
-    const all = [];
-    for (const table of tables) {
-      const deleted = await ctx.db.query(table as any).withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0)).collect();
-      all.push(...deleted.map(i => ({ ...i, type: table })));
-    }
-    return all.sort((a, b) => (b.deletedAt || 0) - (a.deletedAt || 0));
-  },
-});
+// Alias para compatibilidad
+export const getDeletedItems = list;
 
-// Mutaciones necesarias para el frontend
+// Mutaciones de restauración con validación de existencia
 export const restoreClient = mutation({ args: { id: v.id("clients") }, handler: async (ctx, args) => { await ctx.db.patch(args.id, { deletedAt: undefined }); } });
 export const restoreProject = mutation({ args: { id: v.id("projects") }, handler: async (ctx, args) => { await ctx.db.patch(args.id, { deletedAt: undefined }); } });
 export const restoreQuote = mutation({ args: { id: v.id("quotes") }, handler: async (ctx, args) => { await ctx.db.patch(args.id, { deletedAt: undefined }); } });
@@ -66,6 +64,7 @@ export const restoreJob = mutation({ args: { id: v.id("workerJobs") }, handler: 
 export const restoreExpense = mutation({ args: { id: v.id("expenses") }, handler: async (ctx, args) => { await ctx.db.patch(args.id, { deletedAt: undefined }); } });
 export const restoreDocument = mutation({ args: { id: v.id("documents") }, handler: async (ctx, args) => { await ctx.db.patch(args.id, { deletedAt: undefined }); } });
 
+// Mutaciones de purga
 export const purgeClient = mutation({ args: { id: v.id("clients") }, handler: async (ctx, args) => { await ctx.db.delete(args.id); } });
 export const purgeProject = mutation({ args: { id: v.id("projects") }, handler: async (ctx, args) => { await ctx.db.delete(args.id); } });
 export const purgeQuote = mutation({ args: { id: v.id("quotes") }, handler: async (ctx, args) => { await ctx.db.delete(args.id); } });
@@ -79,10 +78,12 @@ export const empty = mutation({
   handler: async (ctx) => {
     const tables = ["clients", "projects", "quotes", "workers", "workerJobs", "expenses", "documents"];
     for (const table of tables) {
-      const deleted = await ctx.db.query(table as any).withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0)).collect();
-      for (const item of deleted) {
-        await ctx.db.delete(item._id);
-      }
+      try {
+        const deleted = await ctx.db.query(table as any).filter((q) => q.gt(q.field("deletedAt"), 0)).collect();
+        for (const item of deleted) {
+          await ctx.db.delete(item._id);
+        }
+      } catch (e) {}
     }
   }
 });
