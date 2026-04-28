@@ -76,25 +76,25 @@ function parsePid(pid: string): { tipo: PapeleraTipo; id: string } {
 
 export default function PapeleraPage() {
   // Cambiamos a la nueva función renombrada para forzar la actualización del servidor
-  const items = useQuery(api.papelera.getDeletedItems);
+  const items = useQuery(api.papelera_v2.v2.getDeletedItems);
 
-  const restoreClient = useMutation(api.papelera.restoreClient);
-  const restoreProject = useMutation(api.papelera.restoreProject);
-  const restoreQuote = useMutation(api.papelera.restoreQuote);
-  const restoreWorker = useMutation(api.papelera.restoreWorker);
-  const restoreJob = useMutation(api.papelera.restoreJob);
-  const restoreExpense = useMutation(api.papelera.restoreExpense);
-  const restoreDocument = useMutation(api.papelera.restoreDocument);
+  const restoreClient = useMutation(api.papelera_v2.restoreClient);
+  const restoreProject = useMutation(api.papelera_v2.restoreProject);
+  const restoreQuote = useMutation(api.papelera_v2.restoreQuote);
+  const restoreWorker = useMutation(api.papelera_v2.restoreWorker);
+  const restoreJob = useMutation(api.papelera_v2.restoreJob);
+  const restoreExpense = useMutation(api.papelera_v2.restoreExpense);
+  const restoreDocument = useMutation(api.papelera_v2.restoreDocument);
 
-  const purgeClient = useMutation(api.papelera.purgeClient);
-  const purgeProject = useMutation(api.papelera.purgeProject);
-  const purgeQuote = useMutation(api.papelera.purgeQuote);
-  const purgeWorker = useMutation(api.papelera.purgeWorker);
-  const purgeJob = useMutation(api.papelera.purgeJob);
-  const purgeExpense = useMutation(api.papelera.purgeExpense);
-  const purgeDocument = useMutation(api.papelera.purgeDocument);
+  const purgeClient = useMutation(api.papelera_v2.purgeClient);
+  const purgeProject = useMutation(api.papelera_v2.purgeProject);
+  const purgeQuote = useMutation(api.papelera_v2.purgeQuote);
+  const purgeWorker = useMutation(api.papelera_v2.purgeWorker);
+  const purgeJob = useMutation(api.papelera_v2.purgeJob);
+  const purgeExpense = useMutation(api.papelera_v2.purgeExpense);
+  const purgeDocument = useMutation(api.papelera_v2.purgeDocument);
 
-  const empty = useMutation(api.papelera.empty);
+  const empty = useMutation(api.papelera_v2.empty);
 
   const handleRestaurar = async (pid: string, resumen: string) => {
     const { tipo, id } = parsePid(pid);
