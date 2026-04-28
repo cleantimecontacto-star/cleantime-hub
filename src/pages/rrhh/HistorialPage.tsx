@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import AppLayout from "@/components/AppLayout";
-import { getHistorial, setHistorial, syncFromConvex } from "@/lib/rrhh/storage";
+import { getHistorial, setHistorial, syncFromConvex, pushToConvex } from "@/lib/rrhh/storage";
 import { fmt, DIAS_BASE_MES } from "@/lib/rrhh/calculations";
 import type { LiquidacionResult } from "@/lib/rrhh/types";
 import { MESES } from "@/lib/rrhh/types";
@@ -25,6 +25,7 @@ export default function HistorialPage() {
     if (!confirm("¿Eliminar esta liquidación del historial?")) return;
     const updated = getHistorial().filter(h => h.id !== id);
     setHistorial(updated);
+    pushToConvex();
     setH(updated.reverse());
     toast.success("Liquidación eliminada");
   }

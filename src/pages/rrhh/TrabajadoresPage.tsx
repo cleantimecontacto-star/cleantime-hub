@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import AppLayout from "@/components/AppLayout";
-import { getTrabajadores, setTrabajadores, getHistorial, setHistorial, newId, syncFromConvex } from "@/lib/rrhh/storage";
+import { getTrabajadores, setTrabajadores, getHistorial, setHistorial, newId, syncFromConvex, pushToConvex } from "@/lib/rrhh/storage";
 import type { Worker } from "@/lib/rrhh/types";
 import { AFP_OPTIONS, SALUD_OPTIONS } from "@/lib/rrhh/types";
 import { Pencil, Trash2, UserPlus, Upload, Download, Users } from "lucide-react";
@@ -52,6 +52,7 @@ export default function TrabajadoresPage() {
     }
     setWorkers(updated);
     setTrabajadores(updated);
+    pushToConvex();
     setModal(null);
     toast.success(modal?.id ? 'Trabajador actualizado' : 'Trabajador agregado');
   }
@@ -61,6 +62,7 @@ export default function TrabajadoresPage() {
     const updated = workers.filter(w => w.id !== id);
     setWorkers(updated);
     setTrabajadores(updated);
+    pushToConvex();
     toast.success('Trabajador eliminado');
   }
 
@@ -91,6 +93,7 @@ export default function TrabajadoresPage() {
       if (data.historial && Array.isArray(data.historial)) {
         setHistorial(data.historial);
       }
+      pushToConvex();
       setShowImport(false);
       setImportText("");
       toast.success(`Importados ${data.trabajadores.length} trabajadores${data.historial ? ` y ${data.historial.length} liquidaciones` : ''}`);

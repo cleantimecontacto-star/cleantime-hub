@@ -85,16 +85,13 @@ async function convexGet(key: string): Promise<string | null> {
   } catch { return null; }
 }
 
+// Siempre jala desde Convex al cargar — garantiza sincronía entre dispositivos
 export async function syncFromConvex(): Promise<{ workers: boolean; historial: boolean }> {
   const result = { workers: false, historial: false };
-  if (!localStorage.getItem(WORKERS_KEY)) {
-    const val = await convexGet(WORKERS_KEY);
-    if (val) { localStorage.setItem(WORKERS_KEY, val); result.workers = true; }
-  }
-  if (!localStorage.getItem(HISTORIAL_KEY)) {
-    const val = await convexGet(HISTORIAL_KEY);
-    if (val) { localStorage.setItem(HISTORIAL_KEY, val); result.historial = true; }
-  }
+  const wVal = await convexGet(WORKERS_KEY);
+  if (wVal) { localStorage.setItem(WORKERS_KEY, wVal); result.workers = true; }
+  const hVal = await convexGet(HISTORIAL_KEY);
+  if (hVal) { localStorage.setItem(HISTORIAL_KEY, hVal); result.historial = true; }
   return result;
 }
 

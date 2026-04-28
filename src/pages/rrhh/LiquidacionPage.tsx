@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import AppLayout from "@/components/AppLayout";
-import { getTrabajadores, getHistorial, setHistorial, newId } from "@/lib/rrhh/storage";
+import { getTrabajadores, getHistorial, setHistorial, newId, syncFromConvex, pushToConvex } from "@/lib/rrhh/storage";
 import { calcularLiquidacion, fmt, DIAS_BASE_MES, parseIngresoDate } from "@/lib/rrhh/calculations";
 import type { Worker, LiquidacionResult } from "@/lib/rrhh/types";
 import { MESES } from "@/lib/rrhh/types";
@@ -24,9 +24,11 @@ export default function LiquidacionPage() {
   const [notaMarzo, setNotaMarzo] = useState("");
 
   useEffect(() => {
-    const ws = getTrabajadores();
-    setWorkers(ws);
-    if (ws.length > 0) setWorkerId(ws[0].id);
+    syncFromConvex().then(() => {
+      const ws = getTrabajadores();
+      setWorkers(ws);
+      if (ws.length > 0) setWorkerId(ws[0].id);
+    });
   }, []);
 
   useEffect(() => {
@@ -70,6 +72,7 @@ export default function LiquidacionPage() {
       h.mes === entry.mes && h.anio === entry.anio
     ));
     setHistorial([...filtered, entry]);
+    pushToConvex();
     setSaved(true);
   }
 
