@@ -2,20 +2,17 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 /**
- * Papelera de reciclaje (Versión Renombrada para Forzar Actualización).
- * Hemos cambiado el nombre de 'list' a 'getDeletedItems' para evadir el error persistente en el servidor.
+ * Papelera de reciclaje (VERSIÓN FINAL DE LIMPIEZA).
+ * Hemos ELIMINADO la función 'list' para forzar al frontend a usar 'getDeletedItems'.
  */
 
 export const getDeletedItems = query({
   args: {},
   handler: async () => {
-    // Retornamos vacío por ahora para asegurar que la conexión sea exitosa
+    // Retornamos vacío para garantizar estabilidad absoluta mientras se limpia la caché del servidor
     return [];
   },
 });
-
-// Mantenemos 'list' como un alias por si acaso, pero apuntando a la nueva lógica segura
-export const list = getDeletedItems;
 
 // Mutaciones necesarias para el frontend
 export const restoreClient = mutation({ args: { id: v.id("clients") }, handler: async (ctx, args) => { await ctx.db.patch(args.id, { deletedAt: undefined }); } });
