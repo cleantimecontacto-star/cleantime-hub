@@ -36,11 +36,21 @@ export const list = query({
           .collect();
 
         if (items && items.length > 0) {
-          // Mapeamos para incluir el tipo de tabla y asegurar consistencia
+          // Mapeamos para incluir el tipo de tabla y asegurar consistencia con el frontend
           allDeletedItems.push(
-            ...items.map((item) => ({
+            ...items.map((item: any) => ({
               ...item,
-              type: table, // El frontend usa esto para saber qué icono mostrar o qué mutación llamar
+              pid: `${table}:${item._id}`, // Identificador único compuesto
+              tipo: table === "workerJobs" ? "trabajo" : 
+                    table === "quotes" ? "cotizacion" : 
+                    table === "clients" ? "cliente" :
+                    table === "projects" ? "proyecto" :
+                    table === "workers" ? "trabajador" :
+                    table === "expenses" ? "gasto" :
+                    table === "documents" ? "documento" : table,
+              resumen: item.name || item.number || item.description || item.category || "Elemento sin nombre",
+              fecha: item.deletedAt,
+              type: table, 
             }))
           );
         }
