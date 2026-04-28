@@ -27,7 +27,13 @@ export const list = query({
     }> = [];
 
     try {
-      const clients = await ctx.db.query("clients").collect();
+      // Usar índices para obtener solo registros con deletedAt definido
+      // Límite de 1000 registros por tabla para evitar timeouts
+      
+      const clients = await ctx.db
+        .query("clients")
+        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", undefined))
+        .take(1000);
       for (const c of clients) {
         if (c.deletedAt) {
           out.push({
@@ -39,7 +45,10 @@ export const list = query({
         }
       }
 
-      const projects = await ctx.db.query("projects").collect();
+      const projects = await ctx.db
+        .query("projects")
+        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", undefined))
+        .take(1000);
       for (const p of projects) {
         if (p.deletedAt) {
           out.push({
@@ -51,7 +60,10 @@ export const list = query({
         }
       }
 
-      const quotes = await ctx.db.query("quotes").collect();
+      const quotes = await ctx.db
+        .query("quotes")
+        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", undefined))
+        .take(1000);
       for (const q of quotes) {
         if (q.deletedAt) {
           out.push({
@@ -63,7 +75,10 @@ export const list = query({
         }
       }
 
-      const workers = await ctx.db.query("workers").collect();
+      const workers = await ctx.db
+        .query("workers")
+        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", undefined))
+        .take(1000);
       for (const w of workers) {
         if (w.deletedAt) {
           out.push({
@@ -75,7 +90,10 @@ export const list = query({
         }
       }
 
-      const jobs = await ctx.db.query("workerJobs").collect();
+      const jobs = await ctx.db
+        .query("workerJobs")
+        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", undefined))
+        .take(1000);
       for (const j of jobs) {
         if (j.deletedAt) {
           out.push({
@@ -87,7 +105,10 @@ export const list = query({
         }
       }
 
-      const expenses = await ctx.db.query("expenses").collect();
+      const expenses = await ctx.db
+        .query("expenses")
+        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", undefined))
+        .take(1000);
       for (const e of expenses) {
         if (e.deletedAt) {
           out.push({
@@ -99,7 +120,10 @@ export const list = query({
         }
       }
 
-      const docs = await ctx.db.query("documents").collect();
+      const docs = await ctx.db
+        .query("documents")
+        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", undefined))
+        .take(1000);
       for (const d of docs) {
         if (d.deletedAt) {
           out.push({
