@@ -8,8 +8,7 @@ import { MESES } from "@/lib/rrhh/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { AlertCircle } from "lucide-react";
 
 const now = new Date();
 
@@ -46,59 +45,63 @@ export default function PatronalPage() {
 
     contenido = (
       <div className="space-y-2">
-        <div className="flex items-center gap-2 flex-wrap mb-3">
-          <Badge variant="secondary">{MESES[mes]} {anio}</Badge>
-          <Badge variant="outline">{diasTrabajados}/{DIAS_BASE_MES} días</Badge>
-          <Badge variant="outline">Imponible: {fmt(base)}</Badge>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{MESES[mes]} {anio}</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-border text-muted-foreground">{diasTrabajados}/{DIAS_BASE_MES} días</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-border text-muted-foreground">Imponible: {fmt(base)}</span>
         </div>
-        {[
-          [`${afpNombre} (Cotización obligatoria ${afpTasa}%)`, afpOblig],
-          [`${saludNombre} (Cotización salud ${saludTasa}%)`, saludCot],
-          [`AFC (Total ${(TASAS_TRAB.afc + TASAS_PAT.afc_pat).toFixed(2)}% = Trab. + Empl.)`, afcTotal],
-          [`SIS ${afpNombre} (${TASAS_TRAB.sis}%)`, sis],
-          [`ISL (${TASAS_TRAB.isl}%)`, isl],
-          [`Seguro Social Previsional (${TASAS_TRAB.ssp}%)`, ssp],
-        ].map(([label, value]) => (
-          <div key={String(label)} className="flex justify-between text-sm border-b border-border/50 pb-1.5">
-            <span className="text-muted-foreground">{label}</span>
-            <span className="font-semibold">{fmt(Number(value))}</span>
-          </div>
-        ))}
-        <div className="bg-primary text-primary-foreground rounded-xl p-4 flex justify-between items-center mt-3">
+        <div className="space-y-0.5">
+          {[
+            [`${afpNombre} (Cotización obligatoria ${afpTasa}%)`, afpOblig],
+            [`${saludNombre} (Cotización salud ${saludTasa}%)`, saludCot],
+            [`AFC (Total ${(TASAS_TRAB.afc + TASAS_PAT.afc_pat).toFixed(2)}% = Trab. + Empl.)`, afcTotal],
+            [`SIS ${afpNombre} (${TASAS_TRAB.sis}%)`, sis],
+            [`ISL (${TASAS_TRAB.isl}%)`, isl],
+            [`Seguro Social Previsional (${TASAS_TRAB.ssp}%)`, ssp],
+          ].map(([label, value]) => (
+            <div key={String(label)} className="flex justify-between text-xs px-1 py-1 border-b border-border/50 last:border-b-0">
+              <span className="text-muted-foreground">{label}</span>
+              <span className="font-semibold">{fmt(Number(value))}</span>
+            </div>
+          ))}
+        </div>
+        <div className="bg-primary text-primary-foreground rounded-lg p-3 flex justify-between items-center mt-2">
           <div>
-            <div className="font-bold text-sm">TOTAL PAGADO (Previred)</div>
-            <div className="text-xs opacity-70">Suma de cotizaciones sobre imponible</div>
+            <div className="text-[10px] opacity-80 font-semibold uppercase tracking-wide">Total pagado (Previred)</div>
+            <div className="text-[10px] opacity-70">Suma de cotizaciones sobre imponible</div>
           </div>
-          <div className="text-xl font-bold">{fmt(totalPrevired)}</div>
+          <div className="text-lg font-bold">{fmt(totalPrevired)}</div>
         </div>
-        <div className="text-right text-xs text-muted-foreground mt-1">
-          Costo empresa aprox. (incl. no imponibles y aportes): <strong>{fmt(costoEmpresa)}</strong>
+        <div className="text-right text-[10px] text-muted-foreground">
+          Costo empresa aprox. (incl. no imponibles y aportes): <strong className="text-foreground">{fmt(costoEmpresa)}</strong>
         </div>
       </div>
     );
   } else {
     const mesLabel = `${MESES[mes]}/${anio}`;
     contenido = (
-      <div className="text-center py-8 text-sm">
-        <p className="text-destructive font-medium">⚠️ No existe liquidación guardada para {mesLabel}.</p>
-        <p className="text-muted-foreground text-xs mt-1">Genera y guarda la liquidación primero.</p>
+      <div className="text-center py-12">
+        <AlertCircle size={32} className="mx-auto text-muted-foreground mb-2" />
+        <p className="font-medium text-sm mb-1">Sin liquidación para {mesLabel}</p>
+        <p className="text-xs text-muted-foreground">Genera y guarda la liquidación primero</p>
       </div>
     );
   }
 
   return (
     <AppLayout title="Resumen Patronal" module="rrhh">
-      <div className="p-4 max-w-2xl mx-auto space-y-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Seleccionar período</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1.5">
-                <Label>Mes</Label>
+      <div className="flex flex-col h-full">
+        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          {/* Selector de período */}
+          <div className="bg-card rounded-lg border border-border p-3 space-y-2">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+              Seleccionar período
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-medium text-muted-foreground">Mes</Label>
                 <Select value={String(mes)} onValueChange={v => setMes(+v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {MESES.slice(1).map((m, i) => (
                       <SelectItem key={i+1} value={String(i+1)}>{m}</SelectItem>
@@ -106,31 +109,31 @@ export default function PatronalPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5">
-                <Label>Año</Label>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-medium text-muted-foreground">Año</Label>
                 <Input
                   type="number" value={anio} min={2020} max={2030}
                   onChange={e => setAnio(+e.target.value)}
+                  className="h-8 text-xs"
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label>Trabajador</Label>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-medium text-muted-foreground">Trabajador</Label>
                 <Select value={workerId} onValueChange={setWorkerId}>
-                  <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                   <SelectContent>
                     {workers.map(w => <SelectItem key={w.id} value={w.id}>{w.nombre.split(' ')[0]}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card>
-          <CardContent className="pt-6">
+          {/* Resultado */}
+          <div className="bg-card rounded-lg border border-border p-3">
             {contenido}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </AppLayout>
   );

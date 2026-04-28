@@ -4,7 +4,7 @@ import { getHistorial, setHistorial, syncFromConvex } from "@/lib/rrhh/storage";
 import { fmt, DIAS_BASE_MES } from "@/lib/rrhh/calculations";
 import type { LiquidacionResult } from "@/lib/rrhh/types";
 import { MESES } from "@/lib/rrhh/types";
-import { Trash2, Eye, FileText } from "lucide-react";
+import { Trash2, Eye, FileText, History } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -112,33 +112,46 @@ export default function HistorialPage() {
 
   return (
     <AppLayout title="Historial" module="rrhh">
-      <div className="p-4 max-w-2xl mx-auto space-y-3">
-        {historial.length === 0 ? (
-          <div className="text-center text-muted-foreground py-12 text-sm">
-            No hay liquidaciones guardadas aún.
-          </div>
-        ) : (
-          historial.map(h => (
-            <div key={h.id} className="bg-card border border-border rounded-xl p-3 flex items-center justify-between gap-2">
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">{h.worker?.nombre}</p>
-                <p className="text-xs text-muted-foreground">{MESES[h.mes]} {h.anio} · {h.diasTrabajados}/{DIAS_BASE_MES} días</p>
-                <p className="text-sm font-semibold text-primary">{fmt(h.liquido)}</p>
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <Button onClick={() => setSelected(h)} variant="ghost" size="icon-sm" title="Ver detalle">
-                  <Eye size={16} />
-                </Button>
-                <Button onClick={() => generarPDF(h)} variant="ghost" size="icon-sm" className="text-teal-600" title="PDF">
-                  <FileText size={16} />
-                </Button>
-                <Button onClick={() => eliminar(h.id!)} variant="ghost" size="icon-sm" className="text-muted-foreground hover:text-destructive" title="Eliminar">
-                  <Trash2 size={16} />
-                </Button>
-              </div>
+      <div className="flex flex-col h-full">
+        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2">
+          {historial.length === 0 ? (
+            <div className="text-center py-12">
+              <History size={32} className="mx-auto text-muted-foreground mb-2" />
+              <p className="font-medium text-sm mb-1">Aún no hay liquidaciones</p>
+              <p className="text-xs text-muted-foreground">Las liquidaciones que guardes aparecerán aquí</p>
             </div>
-          ))
-        )}
+          ) : (
+            historial.map(h => (
+              <div key={h.id} className="bg-card rounded-lg border border-border p-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <p className="text-xs font-bold truncate">{h.worker?.nombre}</p>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground shrink-0">
+                        {MESES[h.mes]} {h.anio}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground truncate">
+                      {h.diasTrabajados}/{DIAS_BASE_MES} días · {h.worker?.cargo}
+                    </p>
+                    <p className="text-xs font-bold text-primary mt-0.5">{fmt(h.liquido)}</p>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <button onClick={() => setSelected(h)} className="p-1 rounded hover:bg-muted" title="Ver detalle">
+                      <Eye size={13} />
+                    </button>
+                    <button onClick={() => generarPDF(h)} className="p-1 rounded hover:bg-muted" title="PDF">
+                      <FileText size={13} />
+                    </button>
+                    <button onClick={() => eliminar(h.id!)} className="p-1 rounded hover:bg-muted text-destructive" title="Eliminar">
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* Modal detalle */}

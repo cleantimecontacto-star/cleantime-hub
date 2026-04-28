@@ -9,8 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Save, Calculator } from "lucide-react";
+import { FileText, Save, Calculator, Users } from "lucide-react";
 
 const now = new Date();
 
@@ -162,27 +161,30 @@ export default function LiquidacionPage() {
 
   return (
     <AppLayout title="Liquidación de Sueldo" module="rrhh">
-      <div className="p-4 max-w-2xl mx-auto space-y-4">
+      <div className="flex flex-col h-full">
+        <div className="flex-1 overflow-y-auto p-3 space-y-2">
 
-        {workers.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6 text-center text-muted-foreground text-sm py-10">
-              No hay trabajadores registrados. Ve a <strong>Trabajadores</strong> para agregar uno.
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            {/* Formulario */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Datos del período</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="space-y-1.5">
-                    <Label>Mes</Label>
+          {workers.length === 0 ? (
+            <div className="bg-card rounded-lg border border-border p-2">
+              <div className="text-center py-12">
+                <Users size={32} className="mx-auto text-muted-foreground mb-2" />
+                <p className="font-medium text-sm mb-1">No hay trabajadores registrados</p>
+                <p className="text-xs text-muted-foreground">Ve a <strong>Trabajadores</strong> para agregar uno</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Formulario */}
+              <div className="bg-card rounded-lg border border-border p-3 space-y-3">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                  Datos del período
+                </p>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-medium text-muted-foreground">Mes</Label>
                     <Select value={String(mes)} onValueChange={v => { setMes(+v); setResult(null); }}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-8 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -192,26 +194,28 @@ export default function LiquidacionPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label>Año</Label>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-medium text-muted-foreground">Año</Label>
                     <Input
                       type="number" value={anio} min={2020} max={2030}
                       onChange={e => { setAnio(+e.target.value); setResult(null); }}
+                      className="h-8 text-xs"
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <Label>Días Ausente</Label>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-medium text-muted-foreground">Días Ausente</Label>
                     <Input
                       type="number" value={ausencias} min={0} max={30}
                       onChange={e => { setAusencias(+e.target.value); setResult(null); }}
+                      className="h-8 text-xs"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label>Trabajador</Label>
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-medium text-muted-foreground">Trabajador</Label>
                   <Select value={workerId} onValueChange={v => { setWorkerId(v); setResult(null); }}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Seleccionar trabajador" />
                     </SelectTrigger>
                     <SelectContent>
@@ -221,34 +225,32 @@ export default function LiquidacionPage() {
                 </div>
 
                 {notaMarzo && (
-                  <div className="text-xs bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 rounded-lg p-3">
+                  <div className="text-[11px] bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 rounded-md p-2">
                     {notaMarzo}
                   </div>
                 )}
 
                 {worker && (
-                  <div className="text-xs text-muted-foreground bg-muted/40 rounded-lg p-3 grid grid-cols-2 gap-1.5">
-                    <span>Sueldo base: <strong>${worker.sueldo.toLocaleString('es-CL')}</strong></span>
-                    <span>AFP: <strong>{worker.afp.split(':')[0]}</strong></span>
-                    <span>Colación: <strong>${worker.colacion.toLocaleString('es-CL')}</strong></span>
-                    <span>Salud: <strong>{worker.salud.split(':')[0]}</strong></span>
+                  <div className="bg-muted/30 rounded border border-border p-2 grid grid-cols-2 gap-1 text-[10px] text-muted-foreground">
+                    <span>Sueldo base: <strong className="text-foreground">${worker.sueldo.toLocaleString('es-CL')}</strong></span>
+                    <span>AFP: <strong className="text-foreground">{worker.afp.split(':')[0]}</strong></span>
+                    <span>Colación: <strong className="text-foreground">${worker.colacion.toLocaleString('es-CL')}</strong></span>
+                    <span>Salud: <strong className="text-foreground">{worker.salud.split(':')[0]}</strong></span>
                   </div>
                 )}
 
-                <Button onClick={calcular} disabled={!workerId} className="w-full" size="lg">
-                  <Calculator />
+                <Button onClick={calcular} disabled={!workerId} className="w-full h-9 text-sm">
+                  <Calculator size={14} />
                   Calcular Liquidación
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
 
-            {/* Resultado */}
-            {result && (
-              <Card>
-                <CardContent className="pt-6 space-y-3">
-                  <div className="text-center mb-2">
-                    <h2 className="font-bold text-base">Liquidación {MESES[result.mes]} {result.anio}</h2>
-                    <p className="text-sm text-muted-foreground">{result.worker.nombre} — {result.worker.cargo}</p>
+              {/* Resultado */}
+              {result && (
+                <div className="bg-card rounded-lg border border-border p-3 space-y-3">
+                  <div className="text-center">
+                    <p className="text-xs font-bold">Liquidación {MESES[result.mes]} {result.anio}</p>
+                    <p className="text-[10px] text-muted-foreground">{result.worker.nombre} — {result.worker.cargo}</p>
                   </div>
 
                   <Section title="Haberes">
@@ -270,33 +272,33 @@ export default function LiquidacionPage() {
                     <Row label="Impuesto Único 2ª Categoría" value={result.impuesto > 0 ? `- ${fmt(result.impuesto)}` : 'Exento'} red={result.impuesto > 0} />
                   </Section>
 
-                  <div className="bg-primary text-primary-foreground rounded-xl p-4 flex justify-between items-center">
+                  <div className="bg-primary text-primary-foreground rounded-lg p-3 flex justify-between items-center">
                     <div>
-                      <div className="text-xs opacity-80 font-medium">LÍQUIDO A PAGAR</div>
-                      {ausencias > 0 && <div className="text-xs opacity-70">{result.diasTrabajados} días ({ausencias} ausencias)</div>}
+                      <div className="text-[10px] opacity-80 font-semibold uppercase tracking-wide">Líquido a pagar</div>
+                      {ausencias > 0 && <div className="text-[10px] opacity-70">{result.diasTrabajados} días ({ausencias} ausencias)</div>}
                     </div>
-                    <div className="text-2xl font-bold">{fmt(result.liquido)}</div>
+                    <div className="text-xl font-bold">{fmt(result.liquido)}</div>
                   </div>
 
                   <div className="flex gap-2">
-                    <Button onClick={generarPDF} variant="outline" className="flex-1">
-                      <FileText />
+                    <Button onClick={generarPDF} variant="outline" className="flex-1 h-8 text-xs">
+                      <FileText size={13} />
                       Generar PDF
                     </Button>
                     <Button
                       onClick={guardar}
                       variant={saved ? "secondary" : "outline"}
-                      className={`flex-1 ${saved ? 'text-green-700 dark:text-green-400' : ''}`}
+                      className={`flex-1 h-8 text-xs ${saved ? 'text-green-700 dark:text-green-400' : ''}`}
                     >
-                      <Save />
+                      <Save size={13} />
                       {saved ? 'Guardado ✓' : 'Guardar'}
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-          </>
-        )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </AppLayout>
   );
@@ -305,7 +307,7 @@ export default function LiquidacionPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider bg-muted/50 rounded-md px-2 py-1.5 mb-1">{title}</div>
+      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide bg-muted/40 rounded-md px-2 py-1 mb-1">{title}</div>
       <div className="space-y-0.5">{children}</div>
     </div>
   );
@@ -313,7 +315,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Row({ label, value, bold, red }: { label: string; value: string; bold?: boolean; red?: boolean }) {
   return (
-    <div className={`flex justify-between text-sm px-1 py-0.5 ${bold ? 'font-semibold' : ''}`}>
+    <div className={`flex justify-between text-xs px-1 py-0.5 ${bold ? 'font-semibold' : ''}`}>
       <span className="text-muted-foreground">{label}</span>
       <span className={red ? 'text-destructive' : ''}>{value}</span>
     </div>

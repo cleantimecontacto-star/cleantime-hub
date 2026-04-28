@@ -3,7 +3,7 @@ import AppLayout from "@/components/AppLayout";
 import { getTrabajadores, setTrabajadores, getHistorial, setHistorial, newId, syncFromConvex } from "@/lib/rrhh/storage";
 import type { Worker } from "@/lib/rrhh/types";
 import { AFP_OPTIONS, SALUD_OPTIONS } from "@/lib/rrhh/types";
-import { Pencil, Trash2, UserPlus, Upload, Download } from "lucide-react";
+import { Pencil, Trash2, UserPlus, Upload, Download, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -108,48 +108,76 @@ export default function TrabajadoresPage() {
   }
 
   return (
-    <AppLayout title="Trabajadores" module="rrhh">
-      <div className="p-4 max-w-2xl mx-auto space-y-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button onClick={abrirNuevo} size="sm">
-            <UserPlus />
-            Agregar Trabajador
-          </Button>
-          <Button onClick={exportarDatos} variant="outline" size="sm">
-            <Download />
-            Exportar
-          </Button>
-          <Button onClick={() => setShowImport(true)} variant="outline" size="sm">
-            <Upload />
-            Importar
-          </Button>
+    <AppLayout
+      title="Trabajadores"
+      module="rrhh"
+      headerRight={
+        <button
+          onClick={abrirNuevo}
+          className="flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded text-xs font-medium"
+        >
+          <UserPlus size={13} /> Nuevo
+        </button>
+      }
+    >
+      <div className="flex flex-col h-full">
+        {/* Acciones secundarias */}
+        <div className="shrink-0 px-3 pt-3 pb-2 flex gap-2">
+          <button
+            onClick={exportarDatos}
+            className="flex items-center gap-1 bg-muted text-muted-foreground hover:text-foreground px-2 py-1 rounded text-xs font-medium border border-border"
+          >
+            <Download size={13} /> Exportar
+          </button>
+          <button
+            onClick={() => setShowImport(true)}
+            className="flex items-center gap-1 bg-muted text-muted-foreground hover:text-foreground px-2 py-1 rounded text-xs font-medium border border-border"
+          >
+            <Upload size={13} /> Importar
+          </button>
         </div>
 
-        {workers.length === 0 ? (
-          <div className="text-center text-muted-foreground py-10 text-sm">
-            No hay trabajadores registrados.
-          </div>
-        ) : (
-          workers.map(w => (
-            <div key={w.id} className="bg-card border border-border rounded-xl p-3 flex items-center justify-between gap-2">
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm truncate">{w.nombre}</p>
-                <p className="text-xs text-muted-foreground">{w.cargo} · RUT: {w.rut}</p>
-                <p className="text-xs text-muted-foreground">
-                  Sueldo: ${w.sueldo.toLocaleString('es-CL')} · {w.afp.split(':')[0]} · {w.salud.split(':')[0]}
-                </p>
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <Button onClick={() => abrirEditar(w)} variant="ghost" size="icon-sm">
-                  <Pencil size={16} />
-                </Button>
-                <Button onClick={() => eliminar(w.id)} variant="ghost" size="icon-sm" className="text-muted-foreground hover:text-destructive">
-                  <Trash2 size={16} />
-                </Button>
-              </div>
+        {/* Lista scrollable */}
+        <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
+          {workers.length === 0 ? (
+            <div className="text-center py-12">
+              <Users size={32} className="mx-auto text-muted-foreground mb-2" />
+              <p className="font-medium text-sm mb-1">Aún no hay trabajadores</p>
+              <p className="text-xs text-muted-foreground mb-3">Agrega tu primer trabajador para comenzar</p>
+              <button
+                onClick={abrirNuevo}
+                className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium mx-auto"
+              >
+                <UserPlus size={15} /> Agregar Trabajador
+              </button>
             </div>
-          ))
-        )}
+          ) : (
+            workers.map(w => (
+              <div key={w.id} className="bg-card rounded-lg border border-border p-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold truncate">{w.nombre}</p>
+                    <div className="flex flex-wrap gap-x-2 mt-0.5">
+                      {w.cargo && <span className="text-[10px] text-muted-foreground">{w.cargo}</span>}
+                      {w.rut && <span className="text-[10px] text-muted-foreground">RUT: {w.rut}</span>}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground truncate">
+                      Sueldo: ${w.sueldo.toLocaleString('es-CL')} · {w.afp.split(':')[0]} · {w.salud.split(':')[0]}
+                    </p>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <button onClick={() => abrirEditar(w)} className="p-1 rounded hover:bg-muted" title="Editar">
+                      <Pencil size={13} />
+                    </button>
+                    <button onClick={() => eliminar(w.id)} className="p-1 rounded hover:bg-muted text-destructive" title="Eliminar">
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* Modal editar/nuevo trabajador */}
