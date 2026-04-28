@@ -97,12 +97,17 @@ export const create = mutation({
     
     // Generación de número de cotización optimizada
     const year = new Date().getFullYear();
-    const lastQuote = await ctx.db
+    const prefix = `COT${year}`;
+    
+    // Obtenemos todas las cotizaciones del año para encontrar el último número
+    // Convex no soporta regex en filtros, así que filtramos manualmente el prefijo
+    const quotesOfYear = await ctx.db
       .query("quotes")
       .withIndex("by_date")
       .order("desc")
-      .filter(q => q.regex(q.field("number"), `^COT${year}`))
-      .first();
+      .collect();
+    
+    const lastQuote = quotesOfYear.find(q => q.number && q.number.startsWith(prefix));
     
     let num = 1;
     if (lastQuote) {
@@ -111,7 +116,7 @@ export const create = mutation({
       if (!isNaN(lastNum)) num = lastNum + 1;
     }
     
-    const number = `COT${year}/${num}`;
+    const number = `${prefix}/${num}`;
     return await ctx.db.insert("quotes", { ...finalArgs, number });
   },
 });
@@ -207,12 +212,15 @@ export const duplicate = mutation({
     if (!original) throw new Error("Cotización no encontrada");
     
     const year = new Date().getFullYear();
-    const lastQuote = await ctx.db
+    const prefix = `COT${year}`;
+    
+    const quotesOfYear = await ctx.db
       .query("quotes")
       .withIndex("by_date")
       .order("desc")
-      .filter(q => q.regex(q.field("number"), `^COT${year}`))
-      .first();
+      .collect();
+    
+    const lastQuote = quotesOfYear.find(q => q.number && q.number.startsWith(prefix));
     
     let num = 1;
     if (lastQuote) {
@@ -221,7 +229,7 @@ export const duplicate = mutation({
       if (!isNaN(lastNum)) num = lastNum + 1;
     }
     
-    const number = `COT${year}/${num}`;
+    const number = `${prefix}/${num}`;
     const {
       _id,
       _creationTime,
