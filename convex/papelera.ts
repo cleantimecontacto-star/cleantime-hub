@@ -2,34 +2,15 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 /**
- * Papelera de reciclaje (Versión de Aislamiento Radical).
- * Solo consultamos 'clients' para verificar si el servidor responde.
+ * Papelera de reciclaje (Modo de Emergencia - Consultas Desactivadas).
+ * Devolvemos una lista vacía para evitar que el Server Error bloquee la aplicación.
  */
 
 export const list = query({
   args: {},
-  handler: async (ctx) => {
-    const out: any[] = [];
-    
-    try {
-      // SOLO PROBAMOS CON CLIENTES PARA VER SI CARGA
-      const items = await ctx.db.query("clients").take(20);
-      
-      for (const item of items) {
-        if ((item as any).deletedAt) {
-          out.push({
-            pid: `cliente:${item._id}`,
-            tipo: "cliente",
-            resumen: (item as any).name || "Sin nombre",
-            fecha: (item as any).deletedAt,
-          });
-        }
-      }
-    } catch (e) {
-      console.error("Error en aislamiento de clientes:", e);
-    }
-
-    return out;
+  handler: async () => {
+    // Retornamos vacío inmediatamente para que la página cargue sin errores
+    return [];
   },
 });
 
