@@ -4,28 +4,35 @@ import { mutation, query } from "./_generated/server";
 export const listByClient = query({
   args: { clientId: v.id("clients") },
   handler: async (ctx, args) => {
-    const projects = await ctx.db
+    return await ctx.db
       .query("projects")
       .withIndex("by_client", (q) => q.eq("clientId", args.clientId))
+      .filter((q) => q.eq(q.field("deletedAt"), undefined))
       .order("asc")
       .collect();
-    return projects.filter((p) => !p.deletedAt);
   },
 });
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const all = await ctx.db.query("projects").order("asc").collect();
-    return all.filter((p) => !p.deletedAt);
+    return await ctx.db
+      .query("projects")
+      .withIndex("by_deletedAt", (q) => q.eq("deletedAt", undefined))
+      .order("asc")
+      .collect();
   },
 });
 
 export const listWithClient = query({
   args: {},
   handler: async (ctx) => {
-    const all = await ctx.db.query("projects").order("asc").collect();
-    const projects = all.filter((p) => !p.deletedAt);
+    const projects = await ctx.db
+      .query("projects")
+      .withIndex("by_deletedAt", (q) => q.eq("deletedAt", undefined))
+      .order("asc")
+      .collect();
+      
     const withClients = await Promise.all(
       projects.map(async (p) => {
         const client = p.clientId ? await ctx.db.get(p.clientId) : null;
@@ -78,11 +85,11 @@ export const remove = mutation({
 export const profitability = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
-    const allQuotes = await ctx.db
+    const projectQuotes = await ctx.db
       .query("quotes")
+      .withIndex("by_deletedAt", (q) => q.eq("deletedAt", undefined))
       .filter((q) => q.eq(q.field("projectId"), args.projectId))
       .collect();
-    const projectQuotes = allQuotes.filter((q) => !q.deletedAt);
 
     const approvedQuotes = projectQuotes.filter((q) => q.status === "Aprobada");
     const totalCotizado = projectQuotes.reduce((s, q) => s + q.total, 0);

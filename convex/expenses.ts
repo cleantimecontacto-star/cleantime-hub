@@ -4,8 +4,11 @@ import { mutation, query } from "./_generated/server";
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const all = await ctx.db.query("expenses").order("desc").collect();
-    return all.filter((e) => !e.deletedAt);
+    return await ctx.db
+      .query("expenses")
+      .withIndex("by_deletedAt", (q) => q.eq("deletedAt", undefined))
+      .order("desc")
+      .collect();
   },
 });
 

@@ -4,16 +4,23 @@ import { mutation, query } from "./_generated/server";
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const all = await ctx.db.query("quotes").order("desc").collect();
-    return all.filter((q) => !q.deletedAt);
+    return await ctx.db
+      .query("quotes")
+      .withIndex("by_deletedAt", (q) => q.eq("deletedAt", undefined))
+      .order("desc")
+      .collect();
   },
 });
 
 export const listWithProject = query({
   args: {},
   handler: async (ctx) => {
-    const all = await ctx.db.query("quotes").order("desc").collect();
-    const quotes = all.filter((q) => !q.deletedAt);
+    const quotes = await ctx.db
+      .query("quotes")
+      .withIndex("by_deletedAt", (q) => q.eq("deletedAt", undefined))
+      .order("desc")
+      .collect();
+    
     return await Promise.all(
       quotes.map(async (q) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -87,16 +94,23 @@ export const create = mutation({
         if (project.address) finalArgs.projectAddress = project.address;
       }
     }
-    const all = await ctx.db.query("quotes").collect();
+    
+    // Generación de número de cotización optimizada
     const year = new Date().getFullYear();
-    const nums = all
-      .filter((q) => q.number.startsWith(`COT${year}`))
-      .map((q) => {
-        const parts = q.number.split("/");
-        return parseInt(parts[parts.length - 1]) || 0;
-      });
-    const num =
-      (nums.length > 0 ? nums.reduce((a, b) => Math.max(a, b), 0) : 0) + 1;
+    const lastQuote = await ctx.db
+      .query("quotes")
+      .withIndex("by_date")
+      .order("desc")
+      .filter(q => q.regex(q.field("number"), `^COT${year}`))
+      .first();
+    
+    let num = 1;
+    if (lastQuote) {
+      const parts = lastQuote.number.split("/");
+      const lastNum = parseInt(parts[parts.length - 1]);
+      if (!isNaN(lastNum)) num = lastNum + 1;
+    }
+    
     const number = `COT${year}/${num}`;
     return await ctx.db.insert("quotes", { ...finalArgs, number });
   },
@@ -191,16 +205,22 @@ export const duplicate = mutation({
   handler: async (ctx, args) => {
     const original = await ctx.db.get(args.id);
     if (!original) throw new Error("Cotización no encontrada");
-    const all = await ctx.db.query("quotes").collect();
+    
     const year = new Date().getFullYear();
-    const nums = all
-      .filter((q) => q.number.startsWith(`COT${year}`))
-      .map((q) => {
-        const parts = q.number.split("/");
-        return parseInt(parts[parts.length - 1]) || 0;
-      });
-    const num =
-      (nums.length > 0 ? nums.reduce((a, b) => Math.max(a, b), 0) : 0) + 1;
+    const lastQuote = await ctx.db
+      .query("quotes")
+      .withIndex("by_date")
+      .order("desc")
+      .filter(q => q.regex(q.field("number"), `^COT${year}`))
+      .first();
+    
+    let num = 1;
+    if (lastQuote) {
+      const parts = lastQuote.number.split("/");
+      const lastNum = parseInt(parts[parts.length - 1]);
+      if (!isNaN(lastNum)) num = lastNum + 1;
+    }
+    
     const number = `COT${year}/${num}`;
     const {
       _id,
