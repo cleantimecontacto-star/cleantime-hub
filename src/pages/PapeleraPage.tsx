@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { RotateCcw, Trash2, Inbox } from "lucide-react";
+import { RotateCcw, Trash2, Inbox, AlertCircle } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -75,8 +75,17 @@ function parsePid(pid: string): { tipo: PapeleraTipo; id: string } {
 }
 
 export default function PapeleraPage() {
-  // Cambiamos a la nueva función renombrada para forzar la actualización del servidor
-  const items = useQuery(api.papelera_v2.v2.getDeletedItems);
+  let items;
+  let errorOccurred = false;
+
+  try {
+    // Intentamos obtener los items. Si el servidor falla, el ErrorBoundary o el hook lanzarán un error.
+    // Usamos el nuevo endpoint renombrado.
+    items = useQuery(api.papelera_v2.getDeletedItems);
+  } catch (e) {
+    console.error("Error capturado en el renderizado de Papelera:", e);
+    errorOccurred = true;
+  }
 
   const restoreClient = useMutation(api.papelera_v2.restoreClient);
   const restoreProject = useMutation(api.papelera_v2.restoreProject);
@@ -99,30 +108,15 @@ export default function PapeleraPage() {
   const handleRestaurar = async (pid: string, resumen: string) => {
     const { tipo, id } = parsePid(pid);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const anyId = id as any;
       switch (tipo) {
-        case "cliente":
-          await restoreClient({ id: anyId as Id<"clients"> });
-          break;
-        case "proyecto":
-          await restoreProject({ id: anyId as Id<"projects"> });
-          break;
-        case "cotizacion":
-          await restoreQuote({ id: anyId as Id<"quotes"> });
-          break;
-        case "trabajador":
-          await restoreWorker({ id: anyId as Id<"workers"> });
-          break;
-        case "trabajo":
-          await restoreJob({ id: anyId as Id<"workerJobs"> });
-          break;
-        case "gasto":
-          await restoreExpense({ id: anyId as Id<"expenses"> });
-          break;
-        case "documento":
-          await restoreDocument({ id: anyId as Id<"documents"> });
-          break;
+        case "cliente": await restoreClient({ id: anyId as Id<"clients"> }); break;
+        case "proyecto": await restoreProject({ id: anyId as Id<"projects"> }); break;
+        case "cotizacion": await restoreQuote({ id: anyId as Id<"quotes"> }); break;
+        case "trabajador": await restoreWorker({ id: anyId as Id<"workers"> }); break;
+        case "trabajo": await restoreJob({ id: anyId as Id<"workerJobs"> }); break;
+        case "gasto": await restoreExpense({ id: anyId as Id<"expenses"> }); break;
+        case "documento": await restoreDocument({ id: anyId as Id<"documents"> }); break;
       }
       toast.success("Restaurado", { description: resumen });
     } catch (e) {
@@ -134,30 +128,15 @@ export default function PapeleraPage() {
   const handleEliminar = async (pid: string) => {
     const { tipo, id } = parsePid(pid);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const anyId = id as any;
       switch (tipo) {
-        case "cliente":
-          await purgeClient({ id: anyId as Id<"clients"> });
-          break;
-        case "proyecto":
-          await purgeProject({ id: anyId as Id<"projects"> });
-          break;
-        case "cotizacion":
-          await purgeQuote({ id: anyId as Id<"quotes"> });
-          break;
-        case "trabajador":
-          await purgeWorker({ id: anyId as Id<"workers"> });
-          break;
-        case "trabajo":
-          await purgeJob({ id: anyId as Id<"workerJobs"> });
-          break;
-        case "gasto":
-          await purgeExpense({ id: anyId as Id<"expenses"> });
-          break;
-        case "documento":
-          await purgeDocument({ id: anyId as Id<"documents"> });
-          break;
+        case "cliente": await purgeClient({ id: anyId as Id<"clients"> }); break;
+        case "proyecto": await purgeProject({ id: anyId as Id<"projects"> }); break;
+        case "cotizacion": await purgeQuote({ id: anyId as Id<"quotes"> }); break;
+        case "trabajador": await purgeWorker({ id: anyId as Id<"workers"> }); break;
+        case "trabajo": await purgeJob({ id: anyId as Id<"workerJobs"> }); break;
+        case "gasto": await purgeExpense({ id: anyId as Id<"expenses"> }); break;
+        case "documento": await purgeDocument({ id: anyId as Id<"documents"> }); break;
       }
       toast.success("Eliminado definitivamente");
     } catch (e) {
@@ -208,19 +187,35 @@ export default function PapeleraPage() {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleVaciar}>
-                    Vaciar
-                  </AlertDialogAction>
+                  <AlertDialogAction onClick={handleVaciar}>Vaciar</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           )}
         </div>
 
-        {items === undefined ? (
+        {errorOccurred ? (
+          <Card className="border-amber-200 bg-amber-50">
+            <CardContent className="py-12 flex flex-col items-center justify-center text-center">
+              <AlertCircle className="h-10 w-10 mb-3 text-amber-500" />
+              <p className="font-bold text-amber-900">Sincronización en curso</p>
+              <p className="text-sm text-amber-800 max-w-md">
+                Estamos actualizando el servidor para corregir el error. 
+                Por favor, espera unos minutos y refresca la página.
+              </p>
+              <Button 
+                variant="outline" 
+                className="mt-4 border-amber-300 text-amber-900 hover:bg-amber-100"
+                onClick={() => window.location.reload()}
+              >
+                Refrescar ahora
+              </Button>
+            </CardContent>
+          </Card>
+        ) : items === undefined ? (
           <Card>
             <CardContent className="py-8 text-center text-sm text-muted-foreground">
-              Cargando…
+              Cargando papelera de forma segura…
             </CardContent>
           </Card>
         ) : list.length === 0 ? (
@@ -228,10 +223,7 @@ export default function PapeleraPage() {
             <CardContent className="py-12 flex flex-col items-center justify-center text-center text-muted-foreground">
               <Inbox className="h-10 w-10 mb-3 opacity-50" />
               <p className="font-medium">La papelera está vacía</p>
-              <p className="text-sm">
-                Los elementos que elimines aparecerán aquí para que puedas
-                restaurarlos.
-              </p>
+              <p className="text-sm">Los elementos eliminados aparecerán aquí.</p>
             </CardContent>
           </Card>
         ) : (
@@ -240,56 +232,30 @@ export default function PapeleraPage() {
               <ScrollArea className="max-h-[70vh]">
                 <ul className="divide-y">
                   {list.map((it: any) => (
-                    <li
-                      key={it.pid}
-                      className="p-3 flex items-center gap-3 flex-wrap"
-                    >
-                      <Badge
-                        variant="secondary"
-                        className={cn(TIPO_COLOR[it.tipo as PapeleraTipo])}
-                      >
+                    <li key={it.pid} className="p-3 flex items-center gap-3 flex-wrap">
+                      <Badge variant="secondary" className={cn(TIPO_COLOR[it.tipo as PapeleraTipo])}>
                         {TIPO_LABEL[it.tipo as PapeleraTipo] || it.tipo}
                       </Badge>
                       <div className="flex-1 min-w-[180px]">
-                        <p className="font-medium break-words text-sm">
-                          {it.resumen || "—"}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground">
-                          Eliminado el {formatFecha(it.fecha)}
-                        </p>
+                        <p className="font-medium break-words text-sm">{it.resumen || "—"}</p>
+                        <p className="text-[11px] text-muted-foreground">Eliminado el {formatFecha(it.fecha)}</p>
                       </div>
                       <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleRestaurar(it.pid, it.resumen)}
-                        >
-                          <RotateCcw className="h-4 w-4 mr-1" />
-                          Restaurar
+                        <Button size="sm" variant="outline" onClick={() => handleRestaurar(it.pid, it.resumen)}>
+                          <RotateCcw className="h-4 w-4 mr-1" /> Restaurar
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <Button size="sm" variant="destructive"><Trash2 className="h-4 w-4" /></Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                ¿Eliminar definitivamente?
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                {it.resumen} se eliminará para siempre. Esta
-                                acción no se puede deshacer.
-                              </AlertDialogDescription>
+                              <AlertDialogTitle>¿Eliminar definitivamente?</AlertDialogTitle>
+                              <AlertDialogDescription>{it.resumen} se eliminará para siempre.</AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleEliminar(it.pid)}
-                              >
-                                Eliminar
-                              </AlertDialogAction>
+                              <AlertDialogAction onClick={() => handleEliminar(it.pid)}>Eliminar</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
