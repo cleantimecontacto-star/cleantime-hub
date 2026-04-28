@@ -121,14 +121,18 @@ export default defineSchema({
   expenseCategories: defineTable({
     name: v.string(),
     order: v.number(),
-  }),
+    deletedAt: v.optional(v.number()),
+  }).index("by_deletedAt", ["deletedAt"]),
 
   // Service types (editable)
   serviceTypes: defineTable({
     name: v.string(),
     pricePerM2: v.optional(v.number()),
     order: v.number(),
-  }).index("by_order", ["order"]),
+    deletedAt: v.optional(v.number()),
+  })
+    .index("by_order", ["order"])
+    .index("by_deletedAt", ["deletedAt"]),
 
   // ── Documentos de empresa ──────────────────────────────────────────────────
 
@@ -136,7 +140,10 @@ export default defineSchema({
   docCategories: defineTable({
     name: v.string(),
     order: v.number(),
-  }).index("by_order", ["order"]),
+    deletedAt: v.optional(v.number()),
+  })
+    .index("by_order", ["order"])
+    .index("by_deletedAt", ["deletedAt"]),
 
   // Company documents
   documents: defineTable({

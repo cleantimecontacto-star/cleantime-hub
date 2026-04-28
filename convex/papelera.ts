@@ -26,8 +26,7 @@ export const list = query({
       fecha: number;
     }> = [];
 
-    // Definimos las tablas y cómo obtener su resumen
-    const tables: Array<{ name: any; tipo: PapeleraTipo; getResumen: (doc: any) => string }> = [
+    const tables: Array<{ name: string; tipo: PapeleraTipo; getResumen: (doc: any) => string }> = [
       { name: "clients", tipo: "cliente", getResumen: (doc) => doc.name || "(sin nombre)" },
       { name: "projects", tipo: "proyecto", getResumen: (doc) => doc.name || "(sin nombre)" },
       { name: "quotes", tipo: "cotizacion", getResumen: (doc) => `${doc.number} — ${doc.clientName}` },
@@ -37,33 +36,40 @@ export const list = query({
       { name: "documents", tipo: "documento", getResumen: (doc) => doc.name || "(sin nombre)" },
     ];
 
-    // Procesamos cada tabla de forma independiente y con captura de errores individual
     for (const table of tables) {
       try {
-        const items = await ctx.db
-          .query(table.name)
-          .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
-          .collect();
+        let items;
+        try {
+          // Intento 1: Usar índice (Rápido)
+          items = await ctx.db
+            .query(table.name as any)
+            .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
+            .collect();
+        } catch (indexError) {
+          // Intento 2: Fallback manual si el índice no existe o falla (Seguro)
+          console.warn(`Índice by_deletedAt no disponible en ${table.name}, usando escaneo manual.`);
+          const all = await ctx.db.query(table.name as any).collect();
+          items = all.filter(item => (item as any).deletedAt && (item as any).deletedAt > 0);
+        }
 
         for (const item of items) {
-          if (item.deletedAt) {
-            out.push({
-              pid: `${table.tipo}:${item._id}`,
-              tipo: table.tipo,
-              resumen: table.getResumen(item),
-              fecha: item.deletedAt,
-            });
-          }
+          out.push({
+            pid: `${table.tipo}:${item._id}`,
+            tipo: table.tipo,
+            resumen: table.getResumen(item),
+            fecha: (item as any).deletedAt,
+          });
         }
       } catch (err) {
-        // Si una tabla falla (por ejemplo, por no tener índice aún o ser muy grande),
-        // registramos el error pero permitimos que las demás sigan funcionando.
-        console.error(`Error consultando tabla ${table.name} en papelera:`, err);
+        // Error crítico en una tabla específica, registrar y continuar con las demás
+        console.error(`Error fatal consultando tabla ${table.name} en papelera:`, err);
       }
     }
 
-    // Ordenar por fecha de eliminación (más reciente primero)
-    return out.sort((a, b) => b.fecha - a.fecha);
+    // Ordenar por fecha de eliminación (más reciente primero) y limitar para evitar exceder límites de memoria
+    return out
+      .sort((a, b) => b.fecha - a.fecha)
+      .slice(0, 200); // Limitar a los últimos 200 elementos para estabilidad
   },
 });
 
@@ -119,7 +125,6 @@ export const restoreDocument = mutation({
 export const purgeClient = mutation({
   args: { id: v.id("clients") },
   handler: async (ctx, args) => {
-    // Hard cascade: Borrado definitivo de proyectos, cotizaciones, trabajos y gastos asociados
     const projects = await ctx.db
       .query("projects")
       .withIndex("by_client", (q) => q.eq("clientId", args.id))
@@ -204,25 +209,21 @@ export const purgeDocument = mutation({
     if (doc) {
       try {
         await ctx.storage.delete(doc.storageId);
-      } catch {
-        // ignorar si el archivo ya no existe
-      }
+      } catch {}
       await ctx.db.delete(args.id);
     }
   },
 });
 
-/** Vacía la papelera: borra definitivamente todos los items con deletedAt. */
 export const empty = mutation({
   args: {},
   handler: async (ctx) => {
     const tables = ["clients", "projects", "quotes", "workers", "workerJobs", "expenses", "documents"];
-    
     for (const tableName of tables) {
       try {
         const items = await ctx.db
           .query(tableName as any)
-          .withIndex("by_deletedAt", (q) => q.gt("deletedAt", 0))
+          .filter(q => q.gt(q.field("deletedAt"), 0))
           .collect();
 
         for (const item of items) {
