@@ -3,24 +3,35 @@ import { toast } from "sonner";
 
 export function useServiceWorker() {
   const toastShown = useRef(false);
+  const reloadingRef = useRef(false);
 
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
 
-    const showUpdateToast = () => {
-      if (toastShown.current) return;
+    const showUpdateToast = (waiting: ServiceWorker | null) => {
+      if (toastShown.current || !waiting) return;
       toastShown.current = true;
-      toast("¡Nueva versión disponible!", {
+      toast("✨ Nueva versión disponible", {
+        description: "Actualizá para cargar la última versión.",
         duration: Infinity,
-        action: { label: "Actualizar", onClick: () => window.location.reload() },
+        action: {
+          label: "Actualizar",
+          onClick: () => waiting.postMessage({ type: "SKIP_WAITING" }),
+        },
       });
     };
+
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (reloadingRef.current) return;
+      reloadingRef.current = true;
+      window.location.reload();
+    });
 
     navigator.serviceWorker
       .register("/sw.js")
       .then((registration) => {
         if (registration.waiting) {
-          showUpdateToast();
+          showUpdateToast(registration.waiting);
           return;
         }
         registration.addEventListener("updatefound", () => {
@@ -28,7 +39,7 @@ export function useServiceWorker() {
           if (!newWorker) return;
           newWorker.addEventListener("statechange", () => {
             if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-              showUpdateToast();
+              showUpdateToast(registration.waiting ?? newWorker);
             }
           });
         });

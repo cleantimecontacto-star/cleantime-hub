@@ -57,6 +57,7 @@ const RRHH_NAV: NavItem[] = [
   { label: "Historial",     icon: <History size={20} />,     path: "/rrhh/historial" },
   { label: "Patronal",      icon: <Building2 size={20} />,   path: "/rrhh/patronal" },
   { label: "Trabajadores",  icon: <UserCog size={20} />,     path: "/rrhh/trabajadores" },
+  { label: "Papelera",      icon: <Trash2 size={20} />,      path: "/papelera" },
 ];
 
 const OPS_BOTTOM = [OPS_NAV[0], OPS_NAV[1], OPS_NAV[2], OPS_NAV[3], OPS_NAV[6]];
@@ -235,7 +236,7 @@ export default function AppLayout({ children, title, headerRight, module: mod }:
                     </button>
                   ))}
                 </div>
-                <div className="grid grid-cols-4 pb-safe">
+                <div className="grid grid-cols-5 pb-safe">
                   {MORE_ITEMS.map((item) => (
                     <button
                       key={item.path}

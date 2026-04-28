@@ -1,13 +1,16 @@
-const CACHE_NAME = "cleantime-v2";
+const CACHE_NAME = "cleantime-v3";
 const urlsToCache = ["/", "/icon/icon-192.png", "/icon/icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
-      .then(() => self.skipWaiting()),
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache)),
   );
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("fetch", (event) => {
