@@ -27,112 +27,89 @@ export const list = query({
     }> = [];
 
     try {
-      // Usar índices para obtener solo registros con deletedAt definido
-      // Límite de 1000 registros por tabla para evitar timeouts
-      
-      const clients = await ctx.db
-        .query("clients")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", undefined))
-        .take(1000);
+      // Cargar todos los registros pero usar .take() para limitar y luego filtrar después
+      const clients = (await ctx.db.query("clients").take(10000)).filter(
+        (c) => c.deletedAt
+      );
       for (const c of clients) {
-        if (c.deletedAt) {
-          out.push({
-            pid: `cliente:${c._id}`,
-            tipo: "cliente",
-            resumen: c.name || "(sin nombre)",
-            fecha: c.deletedAt,
-          });
-        }
+        out.push({
+          pid: `cliente:${c._id}`,
+          tipo: "cliente",
+          resumen: c.name || "(sin nombre)",
+          fecha: c.deletedAt,
+        });
       }
 
-      const projects = await ctx.db
-        .query("projects")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", undefined))
-        .take(1000);
+      const projects = (await ctx.db.query("projects").take(10000)).filter(
+        (p) => p.deletedAt
+      );
       for (const p of projects) {
-        if (p.deletedAt) {
-          out.push({
-            pid: `proyecto:${p._id}`,
-            tipo: "proyecto",
-            resumen: p.name || "(sin nombre)",
-            fecha: p.deletedAt,
-          });
-        }
+        out.push({
+          pid: `proyecto:${p._id}`,
+          tipo: "proyecto",
+          resumen: p.name || "(sin nombre)",
+          fecha: p.deletedAt,
+        });
       }
 
-      const quotes = await ctx.db
-        .query("quotes")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", undefined))
-        .take(1000);
+      const quotes = (await ctx.db.query("quotes").take(10000)).filter(
+        (q) => q.deletedAt
+      );
       for (const q of quotes) {
-        if (q.deletedAt) {
-          out.push({
-            pid: `cotizacion:${q._id}`,
-            tipo: "cotizacion",
-            resumen: `${q.number} — ${q.clientName}`,
-            fecha: q.deletedAt,
-          });
-        }
+        out.push({
+          pid: `cotizacion:${q._id}`,
+          tipo: "cotizacion",
+          resumen: `${q.number} — ${q.clientName}`,
+          fecha: q.deletedAt,
+        });
       }
 
-      const workers = await ctx.db
-        .query("workers")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", undefined))
-        .take(1000);
+      const workers = (await ctx.db.query("workers").take(10000)).filter(
+        (w) => w.deletedAt
+      );
       for (const w of workers) {
-        if (w.deletedAt) {
-          out.push({
-            pid: `trabajador:${w._id}`,
-            tipo: "trabajador",
-            resumen: w.name || "(sin nombre)",
-            fecha: w.deletedAt,
-          });
-        }
+        out.push({
+          pid: `trabajador:${w._id}`,
+          tipo: "trabajador",
+          resumen: w.name || "(sin nombre)",
+          fecha: w.deletedAt,
+        });
       }
 
-      const jobs = await ctx.db
-        .query("workerJobs")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", undefined))
-        .take(1000);
+      const jobs = (await ctx.db.query("workerJobs").take(10000)).filter(
+        (j) => j.deletedAt
+      );
       for (const j of jobs) {
-        if (j.deletedAt) {
-          out.push({
-            pid: `trabajo:${j._id}`,
-            tipo: "trabajo",
-            resumen: `${j.description} (${j.date})`,
-            fecha: j.deletedAt,
-          });
-        }
+        out.push({
+          pid: `trabajo:${j._id}`,
+          tipo: "trabajo",
+          resumen: `${j.description} (${j.date})`,
+          fecha: j.deletedAt,
+        });
       }
 
-      const expenses = await ctx.db
-        .query("expenses")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", undefined))
-        .take(1000);
+      const expenses = (await ctx.db.query("expenses").take(10000)).filter(
+        (e) => e.deletedAt
+      );
       for (const e of expenses) {
-        if (e.deletedAt) {
-          out.push({
-            pid: `gasto:${e._id}`,
-            tipo: "gasto",
-            resumen: `${e.category} — ${e.description}`,
-            fecha: e.deletedAt,
-          });
-        }
+        out.push({
+          pid: `gasto:${e._id}`,
+          tipo: "gasto",
+          resumen: `${e.category} — ${e.description}`,
+          fecha: e.deletedAt,
+        });
       }
 
-      const docs = await ctx.db
-        .query("documents")
-        .withIndex("by_deletedAt", (q) => q.gt("deletedAt", undefined))
-        .take(1000);
+      const docs = (await ctx.db.query("documents").take(10000)).filter(
+        (d) => d.deletedAt
+      );
       for (const d of docs) {
-        if (d.deletedAt) {
-          out.push({
-            pid: `documento:${d._id}`,
-            tipo: "documento",
-            resumen: d.name || "(sin nombre)",
-            fecha: d.deletedAt,
-          });
-        }
+        out.push({
+          pid: `documento:${d._id}`,
+          tipo: "documento",
+          resumen: d.name || "(sin nombre)",
+          fecha: d.deletedAt,
+        });
       }
 
       out.sort((a, b) => b.fecha - a.fecha);
