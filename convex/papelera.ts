@@ -26,91 +26,97 @@ export const list = query({
       fecha: number;
     }> = [];
 
-    const clients = await ctx.db.query("clients").collect();
-    for (const c of clients) {
-      if (c.deletedAt) {
-        out.push({
-          pid: `cliente:${c._id}`,
-          tipo: "cliente",
-          resumen: c.name || "(sin nombre)",
-          fecha: c.deletedAt,
-        });
+    try {
+      const clients = await ctx.db.query("clients").collect();
+      for (const c of clients) {
+        if (c.deletedAt) {
+          out.push({
+            pid: `cliente:${c._id}`,
+            tipo: "cliente",
+            resumen: c.name || "(sin nombre)",
+            fecha: c.deletedAt,
+          });
+        }
       }
+
+      const projects = await ctx.db.query("projects").collect();
+      for (const p of projects) {
+        if (p.deletedAt) {
+          out.push({
+            pid: `proyecto:${p._id}`,
+            tipo: "proyecto",
+            resumen: p.name || "(sin nombre)",
+            fecha: p.deletedAt,
+          });
+        }
+      }
+
+      const quotes = await ctx.db.query("quotes").collect();
+      for (const q of quotes) {
+        if (q.deletedAt) {
+          out.push({
+            pid: `cotizacion:${q._id}`,
+            tipo: "cotizacion",
+            resumen: `${q.number} — ${q.clientName}`,
+            fecha: q.deletedAt,
+          });
+        }
+      }
+
+      const workers = await ctx.db.query("workers").collect();
+      for (const w of workers) {
+        if (w.deletedAt) {
+          out.push({
+            pid: `trabajador:${w._id}`,
+            tipo: "trabajador",
+            resumen: w.name || "(sin nombre)",
+            fecha: w.deletedAt,
+          });
+        }
+      }
+
+      const jobs = await ctx.db.query("workerJobs").collect();
+      for (const j of jobs) {
+        if (j.deletedAt) {
+          out.push({
+            pid: `trabajo:${j._id}`,
+            tipo: "trabajo",
+            resumen: `${j.description} (${j.date})`,
+            fecha: j.deletedAt,
+          });
+        }
+      }
+
+      const expenses = await ctx.db.query("expenses").collect();
+      for (const e of expenses) {
+        if (e.deletedAt) {
+          out.push({
+            pid: `gasto:${e._id}`,
+            tipo: "gasto",
+            resumen: `${e.category} — ${e.description}`,
+            fecha: e.deletedAt,
+          });
+        }
+      }
+
+      const docs = await ctx.db.query("documents").collect();
+      for (const d of docs) {
+        if (d.deletedAt) {
+          out.push({
+            pid: `documento:${d._id}`,
+            tipo: "documento",
+            resumen: d.name || "(sin nombre)",
+            fecha: d.deletedAt,
+          });
+        }
+      }
+
+      out.sort((a, b) => b.fecha - a.fecha);
+    } catch (err) {
+      console.error("Error en papelera.list:", err);
+      // Retornar array vacío en caso de error
     }
 
-    const projects = await ctx.db.query("projects").collect();
-    for (const p of projects) {
-      if (p.deletedAt) {
-        out.push({
-          pid: `proyecto:${p._id}`,
-          tipo: "proyecto",
-          resumen: p.name || "(sin nombre)",
-          fecha: p.deletedAt,
-        });
-      }
-    }
-
-    const quotes = await ctx.db.query("quotes").collect();
-    for (const q of quotes) {
-      if (q.deletedAt) {
-        out.push({
-          pid: `cotizacion:${q._id}`,
-          tipo: "cotizacion",
-          resumen: `${q.number} — ${q.clientName}`,
-          fecha: q.deletedAt,
-        });
-      }
-    }
-
-    const workers = await ctx.db.query("workers").collect();
-    for (const w of workers) {
-      if (w.deletedAt) {
-        out.push({
-          pid: `trabajador:${w._id}`,
-          tipo: "trabajador",
-          resumen: w.name || "(sin nombre)",
-          fecha: w.deletedAt,
-        });
-      }
-    }
-
-    const jobs = await ctx.db.query("workerJobs").collect();
-    for (const j of jobs) {
-      if (j.deletedAt) {
-        out.push({
-          pid: `trabajo:${j._id}`,
-          tipo: "trabajo",
-          resumen: `${j.description} (${j.date})`,
-          fecha: j.deletedAt,
-        });
-      }
-    }
-
-    const expenses = await ctx.db.query("expenses").collect();
-    for (const e of expenses) {
-      if (e.deletedAt) {
-        out.push({
-          pid: `gasto:${e._id}`,
-          tipo: "gasto",
-          resumen: `${e.category} — ${e.description}`,
-          fecha: e.deletedAt,
-        });
-      }
-    }
-
-    const docs = await ctx.db.query("documents").collect();
-    for (const d of docs) {
-      if (d.deletedAt) {
-        out.push({
-          pid: `documento:${d._id}`,
-          tipo: "documento",
-          resumen: d.name || "(sin nombre)",
-          fecha: d.deletedAt,
-        });
-      }
-    }
-
-    out.sort((a, b) => b.fecha - a.fecha);
     return out;
   },
 });
@@ -258,49 +264,60 @@ export const purgeDocument = mutation({
 export const empty = mutation({
   args: {},
   handler: async (ctx) => {
-    const clients = await ctx.db.query("clients").collect();
-    for (const c of clients) {
-      if (c.deletedAt) {
-        const projects = await ctx.db
-          .query("projects")
-          .withIndex("by_client", (q) => q.eq("clientId", c._id))
-          .collect();
-        for (const p of projects) {
-          if (p.deletedAt) await ctx.db.delete(p._id);
+    try {
+      const clients = await ctx.db.query("clients").collect();
+      for (const c of clients) {
+        if (c.deletedAt) {
+          const projects = await ctx.db
+            .query("projects")
+            .withIndex("by_client", (q) => q.eq("clientId", c._id))
+            .collect();
+          for (const p of projects) {
+            await ctx.db.delete(p._id);
+          }
+          await ctx.db.delete(c._id);
         }
-        await ctx.db.delete(c._id);
       }
-    }
-    const projects = await ctx.db.query("projects").collect();
-    for (const p of projects) {
-      if (p.deletedAt) await ctx.db.delete(p._id);
-    }
-    const quotes = await ctx.db.query("quotes").collect();
-    for (const q of quotes) {
-      if (q.deletedAt) await ctx.db.delete(q._id);
-    }
-    const workers = await ctx.db.query("workers").collect();
-    for (const w of workers) {
-      if (w.deletedAt) await ctx.db.delete(w._id);
-    }
-    const jobs = await ctx.db.query("workerJobs").collect();
-    for (const j of jobs) {
-      if (j.deletedAt) await ctx.db.delete(j._id);
-    }
-    const expenses = await ctx.db.query("expenses").collect();
-    for (const e of expenses) {
-      if (e.deletedAt) await ctx.db.delete(e._id);
-    }
-    const docs = await ctx.db.query("documents").collect();
-    for (const d of docs) {
-      if (d.deletedAt) {
-        try {
-          await ctx.storage.delete(d.storageId);
-        } catch {
-          // ignore
+
+      const projects = await ctx.db.query("projects").collect();
+      for (const p of projects) {
+        if (p.deletedAt) await ctx.db.delete(p._id);
+      }
+
+      const quotes = await ctx.db.query("quotes").collect();
+      for (const q of quotes) {
+        if (q.deletedAt) await ctx.db.delete(q._id);
+      }
+
+      const workers = await ctx.db.query("workers").collect();
+      for (const w of workers) {
+        if (w.deletedAt) await ctx.db.delete(w._id);
+      }
+
+      const jobs = await ctx.db.query("workerJobs").collect();
+      for (const j of jobs) {
+        if (j.deletedAt) await ctx.db.delete(j._id);
+      }
+
+      const expenses = await ctx.db.query("expenses").collect();
+      for (const e of expenses) {
+        if (e.deletedAt) await ctx.db.delete(e._id);
+      }
+
+      const docs = await ctx.db.query("documents").collect();
+      for (const d of docs) {
+        if (d.deletedAt) {
+          try {
+            await ctx.storage.delete(d.storageId);
+          } catch {
+            // ignore
+          }
+          await ctx.db.delete(d._id);
         }
-        await ctx.db.delete(d._id);
       }
+    } catch (err) {
+      console.error("Error en papelera.empty:", err);
+      throw err;
     }
   },
 });
