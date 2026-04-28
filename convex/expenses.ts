@@ -4,7 +4,8 @@ import { mutation, query } from "./_generated/server";
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("expenses").order("desc").collect();
+    const all = await ctx.db.query("expenses").order("desc").collect();
+    return all.filter((e) => !e.deletedAt);
   },
 });
 
@@ -37,10 +38,11 @@ export const update = mutation({
   },
 });
 
+/** Soft delete: el gasto pasa a la papelera. */
 export const remove = mutation({
   args: { id: v.id("expenses") },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.id);
+    await ctx.db.patch(args.id, { deletedAt: Date.now() });
   },
 });
 

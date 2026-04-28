@@ -21,6 +21,7 @@ import {
   History,
   Building2,
   UserCog,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils.ts";
 import { useInstallPrompt } from "@/hooks/use-install-prompt.ts";
@@ -48,6 +49,7 @@ const OPS_NAV: NavItem[] = [
   { label: "Documentos",    icon: <FolderOpen size={20} />,      path: "/documentos" },
   { label: "Exportar",      icon: <Download size={20} />,        path: "/exportar" },
   { label: "Configuración", icon: <Settings size={20} />,        path: "/config" },
+  { label: "Papelera",      icon: <Trash2 size={20} />,          path: "/papelera" },
 ];
 
 const RRHH_NAV: NavItem[] = [
@@ -58,7 +60,7 @@ const RRHH_NAV: NavItem[] = [
 ];
 
 const OPS_BOTTOM = [OPS_NAV[0], OPS_NAV[1], OPS_NAV[2], OPS_NAV[3], OPS_NAV[6]];
-const OPS_MORE   = [OPS_NAV[8], OPS_NAV[4], OPS_NAV[5], OPS_NAV[7]];
+const OPS_MORE   = [OPS_NAV[8], OPS_NAV[4], OPS_NAV[5], OPS_NAV[7], OPS_NAV[9]];
 
 type AppLayoutProps = {
   children: ReactNode;

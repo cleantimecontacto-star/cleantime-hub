@@ -4,25 +4,28 @@ import { mutation, query } from "./_generated/server";
 export const listByClient = query({
   args: { clientId: v.id("clients") },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const projects = await ctx.db
       .query("projects")
       .withIndex("by_client", (q) => q.eq("clientId", args.clientId))
       .order("asc")
       .collect();
+    return projects.filter((p) => !p.deletedAt);
   },
 });
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("projects").order("asc").collect();
+    const all = await ctx.db.query("projects").order("asc").collect();
+    return all.filter((p) => !p.deletedAt);
   },
 });
 
 export const listWithClient = query({
   args: {},
   handler: async (ctx) => {
-    const projects = await ctx.db.query("projects").order("asc").collect();
+    const all = await ctx.db.query("projects").order("asc").collect();
+    const projects = all.filter((p) => !p.deletedAt);
     const withClients = await Promise.all(
       projects.map(async (p) => {
         const client = p.clientId ? await ctx.db.get(p.clientId) : null;
@@ -64,43 +67,44 @@ export const update = mutation({
   },
 });
 
+/** Soft delete: el proyecto pasa a la papelera. */
 export const remove = mutation({
   args: { id: v.id("projects") },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.id);
+    await ctx.db.patch(args.id, { deletedAt: Date.now() });
   },
 });
 
 export const profitability = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
-    // All quotes linked to this project
-    const projectQuotes = await ctx.db
+    const allQuotes = await ctx.db
       .query("quotes")
-      .filter(q => q.eq(q.field("projectId"), args.projectId))
+      .filter((q) => q.eq(q.field("projectId"), args.projectId))
       .collect();
+    const projectQuotes = allQuotes.filter((q) => !q.deletedAt);
 
-    const approvedQuotes = projectQuotes.filter(q => q.status === "Aprobada");
+    const approvedQuotes = projectQuotes.filter((q) => q.status === "Aprobada");
     const totalCotizado = projectQuotes.reduce((s, q) => s + q.total, 0);
     const totalAprobado = approvedQuotes.reduce((s, q) => s + q.total, 0);
 
-    // Worker costs for quotes in this project
     let workerCosts = 0;
     for (const quote of projectQuotes) {
-      const jobs = await ctx.db
+      const allJobs = await ctx.db
         .query("workerJobs")
-        .withIndex("by_quote", q => q.eq("quoteId", quote._id))
+        .withIndex("by_quote", (q) => q.eq("quoteId", quote._id))
         .collect();
+      const jobs = allJobs.filter((j) => !j.deletedAt);
       workerCosts += jobs.reduce((s, j) => s + j.amount, 0);
     }
 
-    // Expenses for quotes in this project
     let expenseCosts = 0;
     for (const quote of projectQuotes) {
-      const exps = await ctx.db
+      const allExps = await ctx.db
         .query("expenses")
-        .withIndex("by_quote", q => q.eq("quoteId", quote._id))
+        .withIndex("by_quote", (q) => q.eq("quoteId", quote._id))
         .collect();
+      const exps = allExps.filter((e) => !e.deletedAt);
       expenseCosts += exps.reduce((s, e) => s + e.amount, 0);
     }
 

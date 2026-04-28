@@ -24,7 +24,8 @@ export default defineSchema({
     address: v.optional(v.string()),
     city: v.optional(v.string()),
     archived: v.optional(v.boolean()),
-  }),
+    deletedAt: v.optional(v.number()),
+  }).index("by_deletedAt", ["deletedAt"]),
 
   // Projects (linked to a client)
   projects: defineTable({
@@ -32,7 +33,10 @@ export default defineSchema({
     name: v.string(),
     address: v.optional(v.string()),
     notes: v.optional(v.string()),
-  }).index("by_client", ["clientId"]),
+    deletedAt: v.optional(v.number()),
+  })
+    .index("by_client", ["clientId"])
+    .index("by_deletedAt", ["deletedAt"]),
 
   // Quotes/Cotizaciones
   quotes: defineTable({
@@ -66,7 +70,11 @@ export default defineSchema({
     otNumber: v.optional(v.string()),
     invoiceNumber: v.optional(v.string()),
     paymentStatus: v.optional(v.string()),
-  }).index("by_status", ["status"]).index("by_date", ["date"]),
+    deletedAt: v.optional(v.number()),
+  })
+    .index("by_status", ["status"])
+    .index("by_date", ["date"])
+    .index("by_deletedAt", ["deletedAt"]),
 
   // Workers/Trabajadores
   workers: defineTable({
@@ -78,7 +86,8 @@ export default defineSchema({
       v.literal("por_m2")
     ),
     rateAmount: v.number(),
-  }),
+    deletedAt: v.optional(v.number()),
+  }).index("by_deletedAt", ["deletedAt"]),
 
   // Worker jobs
   workerJobs: defineTable({
@@ -88,7 +97,11 @@ export default defineSchema({
     amount: v.number(),
     paid: v.boolean(),
     date: v.string(),
-  }).index("by_worker", ["workerId"]).index("by_quote", ["quoteId"]),
+    deletedAt: v.optional(v.number()),
+  })
+    .index("by_worker", ["workerId"])
+    .index("by_quote", ["quoteId"])
+    .index("by_deletedAt", ["deletedAt"]),
 
   // Expenses/Gastos
   expenses: defineTable({
@@ -98,7 +111,11 @@ export default defineSchema({
     date: v.string(),
     quoteId: v.optional(v.id("quotes")),
     quoteName: v.optional(v.string()),
-  }).index("by_category", ["category"]).index("by_quote", ["quoteId"]),
+    deletedAt: v.optional(v.number()),
+  })
+    .index("by_category", ["category"])
+    .index("by_quote", ["quoteId"])
+    .index("by_deletedAt", ["deletedAt"]),
 
   // Expense categories (editable)
   expenseCategories: defineTable({
@@ -129,5 +146,8 @@ export default defineSchema({
     fileType: v.string(),
     fileSize: v.number(),
     uploadedAt: v.string(),
-  }).index("by_category", ["categoryId"]),
+    deletedAt: v.optional(v.number()),
+  })
+    .index("by_category", ["categoryId"])
+    .index("by_deletedAt", ["deletedAt"]),
 });

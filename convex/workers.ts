@@ -4,7 +4,8 @@ import { mutation, query } from "./_generated/server";
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("workers").order("asc").collect();
+    const all = await ctx.db.query("workers").order("asc").collect();
+    return all.filter((w) => !w.deletedAt);
   },
 });
 
@@ -12,7 +13,11 @@ export const create = mutation({
   args: {
     name: v.string(),
     phone: v.optional(v.string()),
-    paymentType: v.union(v.literal("por_dia"), v.literal("a_trato"), v.literal("por_m2")),
+    paymentType: v.union(
+      v.literal("por_dia"),
+      v.literal("a_trato"),
+      v.literal("por_m2")
+    ),
     rateAmount: v.number(),
   },
   handler: async (ctx, args) => {
@@ -25,7 +30,11 @@ export const update = mutation({
     id: v.id("workers"),
     name: v.string(),
     phone: v.optional(v.string()),
-    paymentType: v.union(v.literal("por_dia"), v.literal("a_trato"), v.literal("por_m2")),
+    paymentType: v.union(
+      v.literal("por_dia"),
+      v.literal("a_trato"),
+      v.literal("por_m2")
+    ),
     rateAmount: v.number(),
   },
   handler: async (ctx, { id, ...rest }) => {
@@ -33,27 +42,30 @@ export const update = mutation({
   },
 });
 
+/** Soft delete: el trabajador pasa a la papelera. */
 export const remove = mutation({
   args: { id: v.id("workers") },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.id);
+    await ctx.db.patch(args.id, { deletedAt: Date.now() });
   },
 });
 
 export const listJobs = query({
   args: { workerId: v.id("workers") },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const all = await ctx.db
       .query("workerJobs")
       .withIndex("by_worker", (q) => q.eq("workerId", args.workerId))
       .collect();
+    return all.filter((j) => !j.deletedAt);
   },
 });
 
 export const allJobs = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("workerJobs").order("desc").collect();
+    const all = await ctx.db.query("workerJobs").order("desc").collect();
+    return all.filter((j) => !j.deletedAt);
   },
 });
 
@@ -92,9 +104,10 @@ export const markJobPaid = mutation({
   },
 });
 
+/** Soft delete: el trabajo pasa a la papelera. */
 export const removeJob = mutation({
   args: { id: v.id("workerJobs") },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.id);
+    await ctx.db.patch(args.id, { deletedAt: Date.now() });
   },
 });

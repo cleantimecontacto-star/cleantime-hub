@@ -4,14 +4,16 @@ import { mutation, query } from "./_generated/server";
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("quotes").order("desc").collect();
+    const all = await ctx.db.query("quotes").order("desc").collect();
+    return all.filter((q) => !q.deletedAt);
   },
 });
 
 export const listWithProject = query({
   args: {},
   handler: async (ctx) => {
-    const quotes = await ctx.db.query("quotes").order("desc").collect();
+    const all = await ctx.db.query("quotes").order("desc").collect();
+    const quotes = all.filter((q) => !q.deletedAt);
     return await Promise.all(
       quotes.map(async (q) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -77,8 +79,7 @@ export const create = mutation({
     paymentStatus: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // Auto-fill projectName/projectAddress from project if projectId provided
-    let finalArgs = { ...args };
+    const finalArgs = { ...args };
     if (args.projectId && !args.projectName) {
       const project = await ctx.db.get(args.projectId);
       if (project) {
@@ -86,13 +87,16 @@ export const create = mutation({
         if (project.address) finalArgs.projectAddress = project.address;
       }
     }
-    // Auto-generate quote number
     const all = await ctx.db.query("quotes").collect();
     const year = new Date().getFullYear();
     const nums = all
-      .filter(q => q.number.startsWith(`COT${year}`))
-      .map(q => { const parts = q.number.split("/"); return parseInt(parts[parts.length - 1]) || 0; });
-    const num = (nums.length > 0 ? nums.reduce((a, b) => Math.max(a, b), 0) : 0) + 1;
+      .filter((q) => q.number.startsWith(`COT${year}`))
+      .map((q) => {
+        const parts = q.number.split("/");
+        return parseInt(parts[parts.length - 1]) || 0;
+      });
+    const num =
+      (nums.length > 0 ? nums.reduce((a, b) => Math.max(a, b), 0) : 0) + 1;
     const number = `COT${year}/${num}`;
     return await ctx.db.insert("quotes", { ...finalArgs, number });
   },
@@ -132,8 +136,7 @@ export const update = mutation({
     paymentStatus: v.optional(v.string()),
   },
   handler: async (ctx, { id, ...rest }) => {
-    // Auto-fill projectName/projectAddress from project if projectId provided
-    let finalRest = { ...rest };
+    const finalRest = { ...rest };
     if (rest.projectId && !rest.projectName) {
       const project = await ctx.db.get(rest.projectId);
       if (project) {
@@ -160,22 +163,26 @@ export const updateStatus = mutation({
   },
 });
 
+/** Soft delete: la cotización y sus jobs/gastos asociados van a la papelera. */
 export const remove = mutation({
   args: { id: v.id("quotes") },
   handler: async (ctx, args) => {
-    // Cascade: delete worker jobs linked to this quote
+    const ts = Date.now();
     const jobs = await ctx.db
       .query("workerJobs")
-      .withIndex("by_quote", q => q.eq("quoteId", args.id))
+      .withIndex("by_quote", (q) => q.eq("quoteId", args.id))
       .collect();
-    for (const job of jobs) await ctx.db.delete(job._id);
-    // Cascade: delete expenses linked to this quote
+    for (const job of jobs) {
+      if (!job.deletedAt) await ctx.db.patch(job._id, { deletedAt: ts });
+    }
     const expenses = await ctx.db
       .query("expenses")
-      .withIndex("by_quote", q => q.eq("quoteId", args.id))
+      .withIndex("by_quote", (q) => q.eq("quoteId", args.id))
       .collect();
-    for (const exp of expenses) await ctx.db.delete(exp._id);
-    await ctx.db.delete(args.id);
+    for (const exp of expenses) {
+      if (!exp.deletedAt) await ctx.db.patch(exp._id, { deletedAt: ts });
+    }
+    await ctx.db.patch(args.id, { deletedAt: ts });
   },
 });
 
@@ -187,11 +194,25 @@ export const duplicate = mutation({
     const all = await ctx.db.query("quotes").collect();
     const year = new Date().getFullYear();
     const nums = all
-      .filter(q => q.number.startsWith(`COT${year}`))
-      .map(q => { const parts = q.number.split("/"); return parseInt(parts[parts.length - 1]) || 0; });
-    const num = (nums.length > 0 ? nums.reduce((a, b) => Math.max(a, b), 0) : 0) + 1;
+      .filter((q) => q.number.startsWith(`COT${year}`))
+      .map((q) => {
+        const parts = q.number.split("/");
+        return parseInt(parts[parts.length - 1]) || 0;
+      });
+    const num =
+      (nums.length > 0 ? nums.reduce((a, b) => Math.max(a, b), 0) : 0) + 1;
     const number = `COT${year}/${num}`;
-    const { _id, _creationTime, number: _num, ...rest } = original;
-    return await ctx.db.insert("quotes", { ...rest, number, status: "Pendiente" });
+    const {
+      _id,
+      _creationTime,
+      number: _num,
+      deletedAt: _deletedAt,
+      ...rest
+    } = original;
+    return await ctx.db.insert("quotes", {
+      ...rest,
+      number,
+      status: "Pendiente",
+    });
   },
 });

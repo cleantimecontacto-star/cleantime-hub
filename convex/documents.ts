@@ -31,14 +31,14 @@ export const renameCategory = mutation({
 export const deleteCategory = mutation({
   args: { id: v.id("docCategories") },
   handler: async (ctx, { id }) => {
-    // Move docs in this category to "Sin categoría" or delete them
+    // Soft delete all docs in this category (they go to papelera)
+    const ts = Date.now();
     const docs = await ctx.db
       .query("documents")
       .withIndex("by_category", (q) => q.eq("categoryId", id))
       .collect();
     for (const doc of docs) {
-      await ctx.storage.delete(doc.storageId);
-      await ctx.db.delete(doc._id);
+      if (!doc.deletedAt) await ctx.db.patch(doc._id, { deletedAt: ts });
     }
     await ctx.db.delete(id);
   },
@@ -49,13 +49,13 @@ export const deleteCategory = mutation({
 export const listDocuments = query({
   args: { categoryId: v.optional(v.id("docCategories")) },
   handler: async (ctx, { categoryId }) => {
-    if (categoryId) {
-      return await ctx.db
-        .query("documents")
-        .withIndex("by_category", (q) => q.eq("categoryId", categoryId))
-        .collect();
-    }
-    return await ctx.db.query("documents").collect();
+    const docs = categoryId
+      ? await ctx.db
+          .query("documents")
+          .withIndex("by_category", (q) => q.eq("categoryId", categoryId))
+          .collect()
+      : await ctx.db.query("documents").collect();
+    return docs.filter((d) => !d.deletedAt);
   },
 });
 
@@ -81,13 +81,13 @@ export const saveDocument = mutation({
   },
 });
 
+/** Soft delete: el documento pasa a la papelera. El archivo en storage se conserva hasta el purge definitivo. */
 export const deleteDocument = mutation({
   args: { id: v.id("documents") },
   handler: async (ctx, { id }) => {
     const doc = await ctx.db.get(id);
     if (doc) {
-      await ctx.storage.delete(doc.storageId);
-      await ctx.db.delete(id);
+      await ctx.db.patch(id, { deletedAt: Date.now() });
     }
   },
 });

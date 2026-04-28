@@ -12,6 +12,7 @@ import ExportPage from "./pages/ExportPage.tsx";
 import ConfigPage from "./pages/ConfigPage.tsx";
 import ChangeStatusPage from "./pages/ChangeStatusPage.tsx";
 import DocumentsPage from "./pages/DocumentsPage.tsx";
+import PapeleraPage from "./pages/PapeleraPage.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
 import { useAuth } from "./auth/AuthContext.tsx";
 import { useServiceWorker } from "@/hooks/use-service-worker.ts";
@@ -57,6 +58,7 @@ export default function App() {
           <Route path="/config" element={<ProtectedRoute><ConfigPage /></ProtectedRoute>} />
           <Route path="/cambio-estado" element={<ProtectedRoute><ChangeStatusPage /></ProtectedRoute>} />
           <Route path="/documentos" element={<ProtectedRoute><DocumentsPage /></ProtectedRoute>} />
+          <Route path="/papelera" element={<ProtectedRoute><PapeleraPage /></ProtectedRoute>} />
 
           {/* RRHH */}
           <Route path="/rrhh/liquidacion" element={<ProtectedRoute><LiquidacionPage /></ProtectedRoute>} />

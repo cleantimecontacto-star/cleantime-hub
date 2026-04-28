@@ -5,7 +5,7 @@ export const list = query({
   args: {},
   handler: async (ctx) => {
     const all = await ctx.db.query("clients").order("asc").collect();
-    return all.filter(c => !c.archived);
+    return all.filter((c) => !c.archived && !c.deletedAt);
   },
 });
 
@@ -13,7 +13,7 @@ export const listArchived = query({
   args: {},
   handler: async (ctx) => {
     const all = await ctx.db.query("clients").order("asc").collect();
-    return all.filter(c => c.archived === true);
+    return all.filter((c) => c.archived === true && !c.deletedAt);
   },
 });
 
@@ -60,37 +60,48 @@ export const update = mutation({
   },
 });
 
+/**
+ * Soft delete: el cliente y sus dependencias (proyectos, cotizaciones,
+ * jobs y gastos asociados) pasan a la papelera. Se pueden restaurar.
+ */
 export const remove = mutation({
   args: { id: v.id("clients") },
   handler: async (ctx, args) => {
-    // Cascade: delete all projects of this client
+    const ts = Date.now();
+    // Cascade soft-delete: projects of this client
     const projects = await ctx.db
       .query("projects")
-      .withIndex("by_client", q => q.eq("clientId", args.id))
+      .withIndex("by_client", (q) => q.eq("clientId", args.id))
       .collect();
     for (const project of projects) {
-      await ctx.db.delete(project._id);
+      if (!project.deletedAt) {
+        await ctx.db.patch(project._id, { deletedAt: ts });
+      }
     }
-    // Cascade: delete all quotes of this client + their dependents
+    // Cascade soft-delete: quotes of this client + their dependents
     const quotes = await ctx.db
       .query("quotes")
-      .filter(q => q.eq(q.field("clientId"), args.id))
+      .filter((q) => q.eq(q.field("clientId"), args.id))
       .collect();
     for (const quote of quotes) {
-      // Delete worker jobs linked to this quote
+      if (!quote.deletedAt) {
+        await ctx.db.patch(quote._id, { deletedAt: ts });
+      }
       const jobs = await ctx.db
         .query("workerJobs")
-        .withIndex("by_quote", q => q.eq("quoteId", quote._id))
+        .withIndex("by_quote", (q) => q.eq("quoteId", quote._id))
         .collect();
-      for (const job of jobs) await ctx.db.delete(job._id);
-      // Delete expenses linked to this quote
+      for (const job of jobs) {
+        if (!job.deletedAt) await ctx.db.patch(job._id, { deletedAt: ts });
+      }
       const expenses = await ctx.db
         .query("expenses")
-        .withIndex("by_quote", q => q.eq("quoteId", quote._id))
+        .withIndex("by_quote", (q) => q.eq("quoteId", quote._id))
         .collect();
-      for (const exp of expenses) await ctx.db.delete(exp._id);
-      await ctx.db.delete(quote._id);
+      for (const exp of expenses) {
+        if (!exp.deletedAt) await ctx.db.patch(exp._id, { deletedAt: ts });
+      }
     }
-    await ctx.db.delete(args.id);
+    await ctx.db.patch(args.id, { deletedAt: ts });
   },
 });

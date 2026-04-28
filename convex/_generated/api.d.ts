@@ -12,6 +12,7 @@ import type * as clients from "../clients.js";
 import type * as config from "../config.js";
 import type * as documents from "../documents.js";
 import type * as expenses from "../expenses.js";
+import type * as papelera from "../papelera.js";
 import type * as projects from "../projects.js";
 import type * as quotes from "../quotes.js";
 import type * as serviceTypes from "../serviceTypes.js";
@@ -29,6 +30,7 @@ declare const fullApi: ApiFromModules<{
   config: typeof config;
   documents: typeof documents;
   expenses: typeof expenses;
+  papelera: typeof papelera;
   projects: typeof projects;
   quotes: typeof quotes;
   serviceTypes: typeof serviceTypes;
