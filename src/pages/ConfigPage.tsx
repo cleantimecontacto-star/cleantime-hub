@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, type Dispatch, type SetStateAction } from 
 import AppLayout from "@/components/AppLayout.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Plus, Trash2, Check, Pencil, X, Upload, ImageIcon, KeyRound } from "lucide-react";
+import { Plus, Trash2, Check, Pencil, X, Upload, ImageIcon, KeyRound, RotateCw } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog.tsx";
 import { toast } from "sonner";
 import type { Id } from "@/convex/_generated/dataModel.d.ts";
@@ -468,6 +468,50 @@ export default function ConfigPage() {
           </div>
         </div>
 
+        {/* Actualizaciones */}
+        <div className="rounded-lg border bg-card p-3 space-y-2">
+          <h3 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+            <RotateCw size={12} /> Actualizaciones
+          </h3>
+          <p className="text-[10px] text-muted-foreground">
+            Buscá si hay una versión nueva de la app. Si la hay, aparecerá un cartelito para actualizar.
+          </p>
+          <Button
+            onClick={async () => {
+              if (!("serviceWorker" in navigator)) {
+                toast.error("Tu navegador no soporta actualizaciones automáticas");
+                return;
+              }
+              const id = "sw-check";
+              toast.loading("Buscando actualizaciones…", { id });
+              try {
+                const reg = await navigator.serviceWorker.getRegistration();
+                if (!reg) {
+                  toast.error("No hay service worker activo", { id });
+                  return;
+                }
+                await reg.update();
+                setTimeout(() => {
+                  if (reg.installing || reg.waiting) {
+                    toast.success("¡Hay una nueva versión!", {
+                      id,
+                      description: 'Tocá "Actualizar" en el cartelito.',
+                    });
+                  } else {
+                    toast.success("Ya estás en la última versión", { id });
+                  }
+                }, 1500);
+              } catch {
+                toast.error("No se pudo buscar actualizaciones", { id });
+              }
+            }}
+            variant="secondary"
+            className="w-full h-8 text-xs"
+          >
+            <RotateCw size={12} className="mr-1" />
+            Buscar actualización
+          </Button>
+        </div>
 
       </div>
       </div>
