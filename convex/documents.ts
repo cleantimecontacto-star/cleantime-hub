@@ -49,13 +49,16 @@ export const deleteCategory = mutation({
 export const listDocuments = query({
   args: { categoryId: v.optional(v.id("docCategories")) },
   handler: async (ctx, { categoryId }) => {
+    // Usamos el índice by_deletedAt para filtrar solo los documentos activos (deletedAt === undefined)
+    const query = ctx.db
+      .query("documents")
+      .withIndex("by_deletedAt", (q) => q.eq("deletedAt", undefined));
+
     const docs = categoryId
-      ? await ctx.db
-          .query("documents")
-          .withIndex("by_category", (q) => q.eq("categoryId", categoryId))
-          .collect()
-      : await ctx.db.query("documents").collect();
-    return docs.filter((d) => !d.deletedAt);
+      ? await query.filter((q) => q.eq(q.field("categoryId"), categoryId)).collect()
+      : await query.collect();
+
+    return docs;
   },
 });
 
