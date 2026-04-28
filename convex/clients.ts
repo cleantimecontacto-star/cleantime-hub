@@ -4,16 +4,24 @@ import { mutation, query } from "./_generated/server";
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const all = await ctx.db.query("clients").order("asc").collect();
-    return all.filter((c) => !c.archived && !c.deletedAt);
+    // Usamos el índice by_deletedAt para filtrar solo los activos
+    return await ctx.db
+      .query("clients")
+      .withIndex("by_deletedAt", (q) => q.eq("deletedAt", undefined))
+      .filter((q) => q.neq(q.field("archived"), true))
+      .collect();
   },
 });
 
 export const listArchived = query({
   args: {},
   handler: async (ctx) => {
-    const all = await ctx.db.query("clients").order("asc").collect();
-    return all.filter((c) => c.archived === true && !c.deletedAt);
+    // Usamos el índice by_deletedAt para filtrar solo los activos y luego filtramos por archived
+    return await ctx.db
+      .query("clients")
+      .withIndex("by_deletedAt", (q) => q.eq("deletedAt", undefined))
+      .filter((q) => q.eq(q.field("archived"), true))
+      .collect();
   },
 });
 
