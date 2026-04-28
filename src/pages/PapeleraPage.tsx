@@ -75,7 +75,8 @@ function parsePid(pid: string): { tipo: PapeleraTipo; id: string } {
 }
 
 export default function PapeleraPage() {
-  const items = useQuery(api.papelera.list);
+  // Cambiamos a la nueva función renombrada para forzar la actualización del servidor
+  const items = useQuery(api.papelera.getDeletedItems);
 
   const restoreClient = useMutation(api.papelera.restoreClient);
   const restoreProject = useMutation(api.papelera.restoreProject);
@@ -238,7 +239,7 @@ export default function PapeleraPage() {
             <CardContent className="p-0">
               <ScrollArea className="max-h-[70vh]">
                 <ul className="divide-y">
-                  {list.map((it) => (
+                  {list.map((it: any) => (
                     <li
                       key={it.pid}
                       className="p-3 flex items-center gap-3 flex-wrap"
