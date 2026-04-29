@@ -99,10 +99,6 @@ export default function AppLayout({ children, title, headerRight, module: mod }:
 
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-background">
-        {/* Marca de diagnóstico para el usuario */}
-        <div className="fixed top-0 left-0 right-0 z-[9999] bg-green-600 text-white text-[10px] font-bold py-1 text-center pointer-events-none">
-          VERSIÓN REPARADA - 28 ABR 2026
-        </div>
       {/* ── Sidebar — visible solo en md+ ─────────────────────────────── */}
       <aside className="hidden md:flex flex-col w-56 shrink-0 bg-gray-800 border-r border-gray-700">
         {/* Logo */}
