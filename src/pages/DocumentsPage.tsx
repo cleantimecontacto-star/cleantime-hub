@@ -17,6 +17,7 @@ import {
   FileText,
   FileImage,
   File,
+  FolderInput,
 } from "lucide-react";
 
 function formatSize(bytes: number) {
@@ -63,6 +64,7 @@ export default function DocumentsPage() {
   const generateUploadUrl = useMutation(api.documents.generateUploadUrl);
   const saveDocument = useMutation(api.documents.saveDocument);
   const deleteDocument = useMutation(api.documents.deleteDocument);
+  const moveDocument = useMutation(api.documents.moveDocument);
 
   const [newCatName, setNewCatName] = useState("");
   const [addingCat, setAddingCat] = useState(false);
@@ -72,6 +74,9 @@ export default function DocumentsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [deleteCatTarget, setDeleteCatTarget] = useState<Id<"docCategories"> | null>(null);
   const [uploadModal, setUploadModal] = useState<{ file: File; name: string; categoryId: Id<"docCategories"> | null } | null>(null);
+  const [moveModal, setMoveModal] = useState<{ id: Id<"documents">; name: string; categoryId: Id<"docCategories"> } | null>(null);
+  const [moveTargetCat, setMoveTargetCat] = useState<Id<"docCategories"> | "">("");
+  const [moving, setMoving] = useState(false);
   const [deleteDocTarget, setDeleteDocTarget] = useState<{ id: Id<"documents">; name: string } | null>(null);
 
   async function handleAddCategory() {
@@ -334,6 +339,16 @@ export default function DocumentsPage() {
                     </div>
                     <DownloadButton storageId={doc.storageId} name={doc.name} />
                     <button
+                      onClick={() => {
+                        setMoveModal({ id: doc._id, name: doc.name, categoryId: doc.categoryId });
+                        setMoveTargetCat(doc.categoryId);
+                      }}
+                      className="p-1.5 text-muted-foreground hover:text-primary transition-colors"
+                      title="Mover a otra categoría"
+                    >
+                      <FolderInput size={16} />
+                    </button>
+                    <button
                       onClick={() => setDeleteDocTarget({ id: doc._id, name: doc.name })}
                       className="p-1.5 text-muted-foreground hover:text-destructive transition-colors"
                       title="Eliminar"
@@ -393,6 +408,54 @@ export default function DocumentsPage() {
                 className="px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {uploading ? "Subiendo..." : "Subir"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal mover documento */}
+      {moveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-card rounded-xl shadow-xl w-full max-w-sm p-5 flex flex-col gap-4">
+            <h3 className="font-semibold text-base">Mover documento</h3>
+            <div className="text-xs text-muted-foreground bg-muted rounded px-3 py-2 truncate">{moveModal.name}</div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Categoría destino</label>
+              <select
+                value={moveTargetCat}
+                onChange={(e) => setMoveTargetCat(e.target.value as Id<"docCategories">)}
+                className="border border-border rounded-md px-3 py-2 text-sm bg-background w-full"
+              >
+                {categories.map((cat) => (
+                  <option key={cat._id} value={cat._id}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex gap-2 justify-end pt-1">
+              <button
+                onClick={() => setMoveModal(null)}
+                className="px-4 py-2 text-sm rounded-md border border-border hover:bg-muted transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                disabled={moving || !moveTargetCat || moveTargetCat === moveModal.categoryId}
+                onClick={async () => {
+                  if (!moveModal || !moveTargetCat) return;
+                  setMoving(true);
+                  try {
+                    await moveDocument({ id: moveModal.id, categoryId: moveTargetCat as Id<"docCategories"> });
+                    setMoveModal(null);
+                  } catch (e) {
+                    alert("Error al mover: " + (e instanceof Error ? e.message : String(e)));
+                  } finally {
+                    setMoving(false);
+                  }
+                }}
+                className="px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {moving ? "Moviendo..." : "Mover"}
               </button>
             </div>
           </div>
