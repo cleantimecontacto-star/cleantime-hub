@@ -25,7 +25,7 @@ export function ApproveConfirmDialog({ open, onClose, onConfirm, otNumber }: Pro
             </div>
             <DialogTitle className="text-center text-base">¿Cambiar estado a Aprobada?</DialogTitle>
             <DialogDescription className="text-center text-sm leading-relaxed">
-              Ingresaste el N° OT <span className="font-semibold text-foreground">{otNumber}</span>.<br />
+              Ingresaste el N° OT/OC <span className="font-semibold text-foreground">{otNumber}</span>.<br />
               ¿Deseas marcar esta cotización como <span className="font-semibold text-green-700">Aprobada</span>?
             </DialogDescription>
           </div>
