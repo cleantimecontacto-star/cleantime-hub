@@ -313,9 +313,9 @@ export default function QuoteForm() {
           </div>
         )}
 
-        {/* N° OT */}
+        {/* N° OT/OC */}
         <div className="space-y-1 w-1/2">
-          <label className="text-xs font-medium">N° OT <span className="text-muted-foreground font-normal">(opcional)</span></label>
+          <label className="text-xs font-medium">N° OT/OC <span className="text-muted-foreground font-normal">(opcional)</span></label>
           <Input
             value={otNumber}
             onChange={e => {
@@ -326,7 +326,7 @@ export default function QuoteForm() {
                   }
                   setOtNumber(val);
                 }}
-            placeholder="Ej: OT-2024-001"
+            placeholder="Ej: OT-2024-001 / OC-2024-001"
             className="h-8 text-xs"
           />
         </div>
