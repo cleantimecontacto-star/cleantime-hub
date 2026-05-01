@@ -118,7 +118,7 @@ export async function generateQuotePDF(
   if (quote.otNumber) {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
-    doc.text("N° OT:", margin, extraY);
+    doc.text("N° OT/OC:", margin, extraY);
     doc.setFont("helvetica", "normal");
     doc.text(quote.otNumber, margin + 16, extraY);
     extraY += 6;
