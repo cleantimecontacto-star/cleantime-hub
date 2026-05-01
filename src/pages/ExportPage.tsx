@@ -103,7 +103,7 @@ export default function ExportPage() {
     if (exportCotizaciones) {
       const quotesData = filteredQuotes.map(q => ({
         "N° Cotización": q.number,
-        "N° OT": q.otNumber ?? "",
+        "N° OT/OC": q.otNumber ?? "",
         "N° Factura": q.invoiceNumber ?? "",
         "Cliente": q.clientName,
         "Proyecto": q.projectName ?? "",
