@@ -108,7 +108,7 @@ export default function QuotesList() {
       ``,
       `👤 *Cliente:* ${quote.clientName}`,
       quote.projectName ? `📁 *Proyecto:* ${quote.projectName}` : "",
-      quote.otNumber ? `🔢 *N° OT:* ${quote.otNumber}` : "",
+      quote.otNumber ? `🔢 *N° OT/OC:* ${quote.otNumber}` : "",
       ``,
       `🧹 *Servicio:* ${quote.serviceType}`,
       quote.description ? `📝 ${quote.description}` : "",
@@ -184,7 +184,7 @@ export default function QuotesList() {
                   </span>
                 </div>
                 <p className="text-[11px] truncate">{quote.clientName}{quote.projectName ? ` · 📁 ${quote.projectName}` : ""} · {formatDate(quote.date)}</p>
-                <p className="text-[10px] text-muted-foreground truncate">{quote.serviceType} · {quote.squareMeters} {quote.unit ?? "m²"}{quote.otNumber ? ` · OT: ${quote.otNumber}` : ""}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{quote.serviceType} · {quote.squareMeters} {quote.unit ?? "m²"}{quote.otNumber ? ` · OT/OC: ${quote.otNumber}` : ""}</p>
                 {(quote.invoiceNumber || quote.paymentStatus) && (
                   <div className="flex items-center gap-1 mt-0.5">
                     {quote.invoiceNumber && (
@@ -283,7 +283,7 @@ export default function QuotesList() {
               <div className="rounded-lg bg-muted/40 p-3 space-y-1">
                 <p className="font-medium text-foreground">{previewQuote.clientName}</p>
                 {previewQuote.projectName && <p className="text-muted-foreground">📁 {previewQuote.projectName}</p>}
-                {previewQuote.otNumber && <p className="text-muted-foreground">OT: {previewQuote.otNumber}</p>}
+                {previewQuote.otNumber && <p className="text-muted-foreground">OT/OC: {previewQuote.otNumber}</p>}
               </div>
               {/* Servicio */}
               <div className="rounded-lg bg-muted/40 p-3 space-y-1">
