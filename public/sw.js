@@ -1,7 +1,9 @@
-const CACHE_NAME = "cleantime-v3";
+const CACHE_NAME = "cleantime-v4";
 const urlsToCache = ["/", "/icon/icon-192.png", "/icon/icon-512.png"];
 
 self.addEventListener("install", (event) => {
+  // Tomar control inmediatamente sin esperar que se cierre la pestaña vieja
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache)),
   );
@@ -44,6 +46,6 @@ self.addEventListener("activate", (event) => {
           }),
         ),
       )
-      .then(() => self.clients.claim()),
+      .then(() => self.clients.claim()), // Tomar control de todas las pestañas abiertas
   );
 });
