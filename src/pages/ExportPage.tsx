@@ -168,8 +168,8 @@ export default function ExportPage() {
     rows.push(["GASTOS POR CATEGORÍA"]);
     rows.push(["Categoría", "Total (CLP)"]);
     Object.entries(expByCategory)
-      .sort((a, b) => b[1] - a[1])
-      .forEach(([cat, amt]) => rows.push([cat, amt]));
+      .sort((a, b) => (b[1] as number) - (a[1] as number))
+      .forEach(([cat, amt]) => rows.push([cat, amt as number]));
     rows.push(["TOTAL GASTOS", gastosTotal]);
     rows.push([]);
 
