@@ -105,6 +105,44 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* GALERÍA DE TRABAJOS */}
+      <section className="py-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <span className="text-sky-600 text-sm font-medium">Nuestros trabajos</span>
+            <h2 className="text-3xl md:text-4xl font-bold mt-2 text-slate-900 dark:text-white">
+              Resultados que hablan<br />por sí solos
+            </h2>
+            <p className="mt-4 text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
+              Cada trabajo es una muestra de nuestro compromiso con la limpieza profesional.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+              <img
+                src="/gallery/trabajo-1.jpg"
+                alt="Limpieza exterior - jardines y áreas comunes"
+                className="w-full h-64 object-cover hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+            <div className="overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+              <img
+                src="/gallery/trabajo-2.jpg"
+                alt="Limpieza de terraza y espacios al aire libre"
+                className="w-full h-64 object-cover hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+            <div className="overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+              <img
+                src="/gallery/trabajo-3.jpg"
+                alt="Limpieza de pasillos y áreas interiores"
+                className="w-full h-64 object-cover hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* POR QUÉ ELEGIRNOS */}
       <section id="nosotros" className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
