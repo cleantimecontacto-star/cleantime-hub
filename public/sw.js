@@ -1,50 +1,20 @@
-const CACHE_NAME = "cleantime-v5";
-const urlsToCache = ["/", "/icon/icon-192.png", "/icon/icon-512.png"];
+const CACHE_NAME = 'cleantime-v6';
+const urlsToCache = ['/', '/icon/icon-192.png', '/icon/icon-512.png'];
 
-self.addEventListener("install", (event) => {
-  self.skipWaiting();
+self.addEventListener('install', (event) =>
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache)),
-  );
-});
-
-self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") {
-    self.skipWaiting();
-  }
-});
-
-self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-
-  if (event.request.mode === "navigate") {
-    event.respondWith(fetch(event.request).catch(() => caches.match("/")));
-    return;
-  }
-
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
+  )
+);
+self.addEventListener('activate', (event) =>
+  event.waitUntil(
+    caches.keys().then((names) =>
+      Promise.all(names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n)))
+    )
+  )
+);
+self.addEventListener('fetch', (event) =>
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        if (!response.ok) return response;
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
-        return response;
-      })
-      .catch(() => caches.match(event.request)),
-  );
-});
-
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then((cacheNames) =>
-        Promise.all(
-          cacheNames.map((cacheName) => {
-            if (cacheName !== CACHE_NAME) return caches.delete(cacheName);
-          }),
-        ),
-      )
-      .then(() => self.clients.claim()),
-  );
-});
+    caches.match(event.request).then((r) => r || fetch(event.request))
+  )
+);
