@@ -6,13 +6,14 @@ import AppLayout from "@/components/AppLayout.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select.tsx";
-import { Pencil, Trash2, Plus, X, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Pencil, Trash2, Plus, X, Check, ChevronDown, ChevronUp, ClipboardList } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { toast } from "sonner";
 import { formatCLP, todayISO } from "@/lib/cleantime.ts";
 import { cn } from "@/lib/utils.ts";
 import type { Id, Doc } from "@/convex/_generated/dataModel.d.ts";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog.tsx";
+import { SuppliesChecklist } from "@/components/SuppliesChecklist.tsx";
 
 type Worker = Doc<"workers">;
 type WorkerJob = Doc<"workerJobs">;
@@ -111,6 +112,7 @@ export default function WorkersPage() {
   const markPaid = useMutation(api.workers.markJobPaid);
 
   const [search, setSearch] = useState("");
+  const [showChecklist, setShowChecklist] = useState(false);
   const [showWorkerForm, setShowWorkerForm] = useState(false);
   const [editWorkerId, setEditWorkerId] = useState<Id<"workers"> | null>(null);
   const [workerForm, setWorkerForm] = useState<WorkerForm>(emptyWorkerForm());
@@ -124,7 +126,6 @@ export default function WorkersPage() {
     w.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Resumen global de todos los trabajadores
   const allJobsList = allJobs ?? [];
   const totalAcordado = allJobsList.reduce((s, j) => s + j.amount, 0);
   const totalPagado = allJobsList.filter(j => j.paid).reduce((s, j) => s + j.amount, 0);
@@ -205,14 +206,31 @@ export default function WorkersPage() {
     <AppLayout
       title="Trabajadores"
       headerRight={
-        <button onClick={() => { setEditWorkerId(null); setWorkerForm(emptyWorkerForm()); setShowWorkerForm(true); }}
-          className="flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded text-xs font-medium">
-          <Plus size={13} /> Nuevo
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setShowChecklist(c => !c)}
+            title="Checklist de insumos"
+            className={cn(
+              "flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors",
+              showChecklist
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            )}
+          >
+            <ClipboardList size={13} />
+            <span className="hidden sm:inline">Checklist</span>
+          </button>
+          <button
+            onClick={() => { setEditWorkerId(null); setWorkerForm(emptyWorkerForm()); setShowWorkerForm(true); }}
+            className="flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded text-xs font-medium"
+          >
+            <Plus size={13} /> Nuevo
+          </button>
+        </div>
       }
     >
       <div className="flex flex-col h-full">
-        {/* Resumen global trabajadores */}
+        {/* Resumen global */}
         <div className="shrink-0 px-3 pt-3 pb-0">
           <div className="grid grid-cols-3 gap-2 mb-2">
             <div className="bg-card rounded-lg border border-border p-2 text-center">
@@ -229,119 +247,128 @@ export default function WorkersPage() {
             </div>
           </div>
         </div>
-        {/* Fixed: forms + search */}
-        <div className="shrink-0 p-3 pb-2 space-y-2">
-        {showWorkerForm && (
-          <div className="bg-card rounded-lg border border-border p-3 space-y-2">
-            <div className="flex justify-between items-center">
-              <p className="text-xs font-bold">{editWorkerId ? "Editar" : "Nuevo"} Trabajador</p>
-              <button onClick={() => setShowWorkerForm(false)}><X size={14} /></button>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-0.5">
-                <label className="text-[10px] text-muted-foreground">Nombre *</label>
-                <Input value={workerForm.name} onChange={e => setWorkerForm(f => ({ ...f, name: e.target.value }))} className="h-7 text-xs" />
-              </div>
-              <div className="space-y-0.5">
-                <label className="text-[10px] text-muted-foreground">Teléfono</label>
-                <Input value={workerForm.phone} onChange={e => setWorkerForm(f => ({ ...f, phone: e.target.value }))} className="h-7 text-xs" />
-              </div>
-              <div className="space-y-0.5">
-                <label className="text-[10px] text-muted-foreground">Tipo pago</label>
-                <Select value={workerForm.paymentType} onValueChange={v => setWorkerForm(f => ({ ...f, paymentType: v as Worker["paymentType"] }))}>
-                  <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="por_dia">Por día</SelectItem>
-                    <SelectItem value="a_trato">A trato</SelectItem>
-                    <SelectItem value="por_m2">Por m²</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-0.5">
-                <label className="text-[10px] text-muted-foreground">Tarifa</label>
-                <Input type="number" value={workerForm.rateAmount} onChange={e => setWorkerForm(f => ({ ...f, rateAmount: e.target.value }))} className="h-7 text-xs" />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleSaveWorker} disabled={saving} className="flex-1 h-7 text-xs">
-                <Check size={12} className="mr-1" /> {saving ? "..." : "Guardar"}
-              </Button>
-              <Button variant="secondary" onClick={() => setShowWorkerForm(false)} className="h-7 text-xs px-3">Cancelar</Button>
-            </div>
+
+        {/* Checklist de insumos (colapsable) */}
+        {showChecklist && (
+          <div className="shrink-0 px-3 pt-2">
+            <SuppliesChecklist defaultCount={(workers ?? []).length || 1} />
           </div>
         )}
 
-        {showJobForm && (
-          <div className="bg-card rounded-lg border border-border p-3 space-y-2">
-            <div className="flex justify-between items-center">
-              <p className="text-xs font-bold">{editJobId ? "Editar" : "Agregar"} Trabajo</p>
-              <button onClick={() => { setShowJobForm(false); setEditJobId(null); }}><X size={14} /></button>
-            </div>
-            <div className="space-y-2">
-              <div className="space-y-0.5">
-                <label className="text-[10px] text-muted-foreground">Descripción *</label>
-                <Input value={jobForm.description} onChange={e => setJobForm(f => ({ ...f, description: e.target.value }))} className="h-7 text-xs" />
+        {/* Forms + search */}
+        <div className="shrink-0 p-3 pb-2 space-y-2">
+          {showWorkerForm && (
+            <div className="bg-card rounded-lg border border-border p-3 space-y-2">
+              <div className="flex justify-between items-center">
+                <p className="text-xs font-bold">{editWorkerId ? "Editar" : "Nuevo"} Trabajador</p>
+                <button onClick={() => setShowWorkerForm(false)}><X size={14} /></button>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-0.5">
-                  <label className="text-[10px] text-muted-foreground">Monto</label>
-                  <Input type="number" value={jobForm.amount} onChange={e => setJobForm(f => ({ ...f, amount: e.target.value }))} className="h-7 text-xs" />
+                  <label className="text-[10px] text-muted-foreground">Nombre *</label>
+                  <Input value={workerForm.name} onChange={e => setWorkerForm(f => ({ ...f, name: e.target.value }))} className="h-7 text-xs" />
                 </div>
                 <div className="space-y-0.5">
-                  <label className="text-[10px] text-muted-foreground">Fecha</label>
-                  <Input type="date" value={jobForm.date} onChange={e => setJobForm(f => ({ ...f, date: e.target.value }))} className="h-7 text-xs" />
+                  <label className="text-[10px] text-muted-foreground">Teléfono</label>
+                  <Input value={workerForm.phone} onChange={e => setWorkerForm(f => ({ ...f, phone: e.target.value }))} className="h-7 text-xs" />
+                </div>
+                <div className="space-y-0.5">
+                  <label className="text-[10px] text-muted-foreground">Tipo pago</label>
+                  <Select value={workerForm.paymentType} onValueChange={v => setWorkerForm(f => ({ ...f, paymentType: v as Worker["paymentType"] }))}>
+                    <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="por_dia">Por día</SelectItem>
+                      <SelectItem value="a_trato">A trato</SelectItem>
+                      <SelectItem value="por_m2">Por m²</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-0.5">
+                  <label className="text-[10px] text-muted-foreground">Tarifa</label>
+                  <Input type="number" value={workerForm.rateAmount} onChange={e => setWorkerForm(f => ({ ...f, rateAmount: e.target.value }))} className="h-7 text-xs" />
                 </div>
               </div>
-              <div className="space-y-0.5">
-                <label className="text-[10px] text-muted-foreground">Cotización asociada (opcional)</label>
-                <Select value={jobForm.quoteId || "none"} onValueChange={v => setJobForm(f => ({ ...f, quoteId: v === "none" ? "" : v }))}>
-                  <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Sin cotización" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Sin cotización</SelectItem>
-                    {(quotes ?? []).map(q => <SelectItem key={q._id} value={q._id}>{q.number} - {q.clientName}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+              <div className="flex gap-2">
+                <Button onClick={handleSaveWorker} disabled={saving} className="flex-1 h-7 text-xs">
+                  <Check size={12} className="mr-1" /> {saving ? "..." : "Guardar"}
+                </Button>
+                <Button variant="secondary" onClick={() => setShowWorkerForm(false)} className="h-7 text-xs px-3">Cancelar</Button>
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button onClick={handleSaveJob} disabled={saving} className="flex-1 h-7 text-xs">
-                <Check size={12} className="mr-1" /> {saving ? "..." : editJobId ? "Guardar" : "Agregar"}
-              </Button>
-              <Button variant="secondary" onClick={() => { setShowJobForm(false); setEditJobId(null); }} className="h-7 text-xs px-3">Cancelar</Button>
-            </div>
-          </div>
-        )}
+          )}
 
-        <Input
-          placeholder="Buscar trabajador..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="h-8 text-xs"
-        />
+          {showJobForm && (
+            <div className="bg-card rounded-lg border border-border p-3 space-y-2">
+              <div className="flex justify-between items-center">
+                <p className="text-xs font-bold">{editJobId ? "Editar" : "Agregar"} Trabajo</p>
+                <button onClick={() => { setShowJobForm(false); setEditJobId(null); }}><X size={14} /></button>
+              </div>
+              <div className="space-y-2">
+                <div className="space-y-0.5">
+                  <label className="text-[10px] text-muted-foreground">Descripción *</label>
+                  <Input value={jobForm.description} onChange={e => setJobForm(f => ({ ...f, description: e.target.value }))} className="h-7 text-xs" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-0.5">
+                    <label className="text-[10px] text-muted-foreground">Monto</label>
+                    <Input type="number" value={jobForm.amount} onChange={e => setJobForm(f => ({ ...f, amount: e.target.value }))} className="h-7 text-xs" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <label className="text-[10px] text-muted-foreground">Fecha</label>
+                    <Input type="date" value={jobForm.date} onChange={e => setJobForm(f => ({ ...f, date: e.target.value }))} className="h-7 text-xs" />
+                  </div>
+                </div>
+                <div className="space-y-0.5">
+                  <label className="text-[10px] text-muted-foreground">Cotización asociada (opcional)</label>
+                  <Select value={jobForm.quoteId || "none"} onValueChange={v => setJobForm(f => ({ ...f, quoteId: v === "none" ? "" : v }))}>
+                    <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Sin cotización" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sin cotización</SelectItem>
+                      {(quotes ?? []).map(q => <SelectItem key={q._id} value={q._id}>{q.number} - {q.clientName}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleSaveJob} disabled={saving} className="flex-1 h-7 text-xs">
+                  <Check size={12} className="mr-1" /> {saving ? "..." : editJobId ? "Guardar" : "Agregar"}
+                </Button>
+                <Button variant="secondary" onClick={() => { setShowJobForm(false); setEditJobId(null); }} className="h-7 text-xs px-3">Cancelar</Button>
+              </div>
+            </div>
+          )}
+
+          <Input
+            placeholder="Buscar trabajador..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="h-8 text-xs"
+          />
         </div>
 
-        {/* Scrollable list */}
+        {/* Lista trabajadores */}
         <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
-        {workers === undefined && [0,1].map(i => <Skeleton key={i} className="h-14" />)}
-        {workers !== undefined && filtered.length === 0 && (
-          <p className="text-center text-sm text-muted-foreground py-4">No hay trabajadores</p>
-        )}
-        {filtered.map(w => (
-          <WorkerCard
-            key={w._id}
-            worker={w}
-            jobs={(allJobs ?? []).filter(j => j.workerId === w._id)}
-            onEdit={wk => { setEditWorkerId(wk._id); setWorkerForm({ name: wk.name, phone: wk.phone ?? "", paymentType: wk.paymentType, rateAmount: String(wk.rateAmount) }); setShowWorkerForm(true); }}
-            onDelete={id => setDeleteWorkerTarget(id)}
-            onAddJob={openAddJob}
-            onEditJob={openEditJob}
-            onDeleteJob={async id => { await removeJob({ id }); }}
-            onTogglePaid={async (id, paid) => { await markPaid({ id, paid }); }}
-            quotes={quotes ?? []}
-          />
-        ))}
+          {workers === undefined && [0, 1].map(i => <Skeleton key={i} className="h-14" />)}
+          {workers !== undefined && filtered.length === 0 && (
+            <p className="text-center text-sm text-muted-foreground py-4">No hay trabajadores</p>
+          )}
+          {filtered.map(w => (
+            <WorkerCard
+              key={w._id}
+              worker={w}
+              jobs={(allJobs ?? []).filter(j => j.workerId === w._id)}
+              onEdit={wk => { setEditWorkerId(wk._id); setWorkerForm({ name: wk.name, phone: wk.phone ?? "", paymentType: wk.paymentType, rateAmount: String(wk.rateAmount) }); setShowWorkerForm(true); }}
+              onDelete={id => setDeleteWorkerTarget(id)}
+              onAddJob={openAddJob}
+              onEditJob={openEditJob}
+              onDeleteJob={async id => { await removeJob({ id }); }}
+              onTogglePaid={async (id, paid) => { await markPaid({ id, paid }); }}
+              quotes={quotes ?? []}
+            />
+          ))}
         </div>
       </div>
+
       <DeleteConfirmDialog
         open={!!deleteWorkerTarget}
         onClose={() => setDeleteWorkerTarget(null)}
