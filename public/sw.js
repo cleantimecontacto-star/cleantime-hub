@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cleantime-v6';
+const CACHE_NAME = 'cleantime-v7';
 const urlsToCache = ['/', '/icon/icon-192.png', '/icon/icon-512.png'];
 
 self.addEventListener('install', (event) =>
@@ -18,3 +18,9 @@ self.addEventListener('fetch', (event) =>
     caches.match(event.request).then((r) => r || fetch(event.request))
   )
 );
+// Maneja el mensaje SKIP_WAITING para activar el nuevo SW inmediatamente
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
