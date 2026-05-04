@@ -12,7 +12,7 @@ type Supply = {
 
 const DEFAULT_SUPPLIES: Supply[] = [
   { id: 'escoba', nombre: 'Escoba', emoji: '🧹', porTrabajador: 1 },
-  { id: 'pala', nombre: 'Pala', emoji: '🪣', porTrabajador: 1 },
+  { id: 'pala', nombre: 'Pala', emoji: '⛏️', porTrabajador: 1 },
   { id: 'mopa', nombre: 'Mopa', emoji: '🫧', porTrabajador: 1 },
   { id: 'balde', nombre: 'Balde', emoji: '🪣', porTrabajador: 1 },
   { id: 'espatula', nombre: 'Espátula', emoji: '🔧', porTrabajador: 1 },
@@ -45,6 +45,7 @@ export function SuppliesChecklist({ defaultCount = 1 }: { defaultCount?: number 
   const [supplies, setSupplies] = useState<Supply[]>(loadSupplies);
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [newItem, setNewItem] = useState('');
+  const [newEmoji, setNewEmoji] = useState('📦');
   const [showAdd, setShowAdd] = useState(false);
   const [editState, setEditState] = useState<EditState>(null);
 
@@ -70,8 +71,9 @@ export function SuppliesChecklist({ defaultCount = 1 }: { defaultCount?: number 
     const name = newItem.trim();
     if (!name) return;
     const id = 'custom-' + Date.now();
-    setSupplies(s => [...s, { id, nombre: name, emoji: '📦', porTrabajador: 1 }]);
+    setSupplies(s => [...s, { id, nombre: name, emoji: newEmoji.trim() || '📦', porTrabajador: 1 }]);
     setNewItem('');
+    setNewEmoji('📦');
     setShowAdd(false);
   };
 
@@ -240,12 +242,19 @@ export function SuppliesChecklist({ defaultCount = 1 }: { defaultCount?: number 
         {showAdd ? (
           <div className="flex items-center gap-1.5 px-2 py-1">
             <Input
+              value={newEmoji}
+              onChange={e => setNewEmoji(e.target.value)}
+              className="h-7 w-12 text-center text-sm px-1 shrink-0"
+              maxLength={2}
+              placeholder="📦"
+            />
+            <Input
               autoFocus
               value={newItem}
               onChange={e => setNewItem(e.target.value)}
               onKeyDown={e => {
                 if (e.key === 'Enter') addItem();
-                if (e.key === 'Escape') setShowAdd(false);
+                if (e.key === 'Escape') { setShowAdd(false); setNewEmoji('📦'); }
               }}
               placeholder="Nombre del insumo..."
               className="h-7 text-xs flex-1"
@@ -256,7 +265,7 @@ export function SuppliesChecklist({ defaultCount = 1 }: { defaultCount?: number 
             >
               OK
             </button>
-            <button onClick={() => { setShowAdd(false); setNewItem(''); }}
+            <button onClick={() => { setShowAdd(false); setNewItem(''); setNewEmoji('📦'); }}
               className="h-7 px-2 rounded hover:bg-muted text-xs text-muted-foreground"
             >
               X
