@@ -474,7 +474,7 @@ export default function ConfigPage() {
             <RotateCw size={12} /> Actualizaciones
           </h3>
           <p className="text-[10px] text-muted-foreground">
-            Buscá si hay una versión nueva de la app. Si la hay, aparecerá un cartelito para actualizar.
+            Buscá si hay una versión nueva de la app. Si la hay, aparecerá el cartelito para actualizar.
           </p>
           <Button
             onClick={async () => {
@@ -492,13 +492,25 @@ export default function ConfigPage() {
                 }
                 await reg.update();
                 setTimeout(() => {
-                  if (reg.installing || reg.waiting) {
-                    toast.success("¡Hay una nueva versión!", {
+                  const waiting = reg.waiting;
+                  if (waiting) {
+                    // Mostrar el cartelito directamente con el botón Actualizar funcional
+                    toast.dismiss(id);
+                    toast("✨ Nueva versión disponible", {
+                      description: "Tocá Actualizar para cargar la última versión.",
+                      duration: Infinity,
+                      action: {
+                        label: "Actualizar",
+                        onClick: () => waiting.postMessage({ type: "SKIP_WAITING" }),
+                      },
+                    });
+                  } else if (reg.installing) {
+                    toast.loading("Instalando nueva versión…", {
                       id,
-                      description: 'Tocá "Actualizar" en el cartelito.',
+                      description: "La app se actualizará en unos segundos.",
                     });
                   } else {
-                    toast.success("Ya estás en la última versión", { id });
+                    toast.success("Ya estás en la última versión ✓", { id });
                   }
                 }, 1500);
               } catch {
