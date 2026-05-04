@@ -484,6 +484,20 @@ export default function ConfigPage() {
               }
               const id = "sw-check";
               toast.loading("Buscando actualizaciones…", { id });
+
+              // Helper: muestra el cartelito con botón Actualizar funcional
+              const showUpdateBanner = (worker: ServiceWorker) => {
+                toast.dismiss(id);
+                toast("✨ Nueva versión disponible", {
+                  description: "Tocá Actualizar para cargar la última versión.",
+                  duration: Infinity,
+                  action: {
+                    label: "Actualizar",
+                    onClick: () => worker.postMessage({ type: "SKIP_WAITING" }),
+                  },
+                });
+              };
+
               try {
                 const reg = await navigator.serviceWorker.getRegistration();
                 if (!reg) {
@@ -492,22 +506,23 @@ export default function ConfigPage() {
                 }
                 await reg.update();
                 setTimeout(() => {
-                  const waiting = reg.waiting;
-                  if (waiting) {
-                    // Mostrar el cartelito directamente con el botón Actualizar funcional
-                    toast.dismiss(id);
-                    toast("✨ Nueva versión disponible", {
-                      description: "Tocá Actualizar para cargar la última versión.",
-                      duration: Infinity,
-                      action: {
-                        label: "Actualizar",
-                        onClick: () => waiting.postMessage({ type: "SKIP_WAITING" }),
-                      },
-                    });
+                  if (reg.waiting) {
+                    // Ya hay una versión nueva esperando → mostrar cartelito
+                    showUpdateBanner(reg.waiting);
                   } else if (reg.installing) {
+                    // Todavía instalando → esperar a que termine
                     toast.loading("Instalando nueva versión…", {
                       id,
                       description: "La app se actualizará en unos segundos.",
+                    });
+                    const newWorker = reg.installing;
+                    newWorker.addEventListener("statechange", () => {
+                      if (
+                        newWorker.state === "installed" &&
+                        navigator.serviceWorker.controller
+                      ) {
+                        showUpdateBanner(reg.waiting ?? newWorker);
+                      }
                     });
                   } else {
                     toast.success("Ya estás en la última versión ✓", { id });
