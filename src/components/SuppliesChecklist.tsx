@@ -13,7 +13,7 @@ type Supply = {
 const DEFAULT_SUPPLIES: Supply[] = [
   { id: 'escoba', nombre: 'Escoba', emoji: '🧹', porTrabajador: 1 },
   { id: 'pala', nombre: 'Pala', emoji: '🪏', porTrabajador: 1 },
-  { id: 'mopa', nombre: 'Mopa', emoji: '🫧', porTrabajador: 1 },
+  { id: 'mopa', nombre: 'Mopa', emoji: '🧹', porTrabajador: 1 },
   { id: 'balde', nombre: 'Balde', emoji: '🪣', porTrabajador: 1 },
   { id: 'espatula', nombre: 'Espátula', emoji: '🔪', porTrabajador: 1 },
   { id: 'mascarilla', nombre: 'Mascarilla', emoji: '😷', porTrabajador: 1 },
