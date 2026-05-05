@@ -47,7 +47,6 @@ const OPS_NAV: NavItem[] = [
   { label: "Clientes",      icon: <Users size={20} />,           path: "/clientes" },
   { label: "Trabajadores",  icon: <HardHat size={20} />,         path: "/trabajadores" },
   { label: "Gastos",        icon: <Receipt size={20} />,         path: "/gastos" },
-  { label: "Informes",      icon: <ClipboardList size={20} />,   path: "/informes" },
   { label: "Documentos",    icon: <FolderOpen size={20} />,      path: "/documentos" },
   { label: "Exportar",      icon: <Download size={20} />,        path: "/exportar" },
   { label: "Configuración", icon: <Settings size={20} />,        path: "/config" },
@@ -62,8 +61,8 @@ const RRHH_NAV: NavItem[] = [
   { label: "Papelera",      icon: <Trash2 size={20} />,      path: "/papelera" },
 ];
 
-const OPS_BOTTOM = [OPS_NAV[0], OPS_NAV[1], OPS_NAV[2], OPS_NAV[3], OPS_NAV[6]];
-const OPS_MORE   = [OPS_NAV[9], OPS_NAV[4], OPS_NAV[5], OPS_NAV[8], OPS_NAV[10]];
+const OPS_BOTTOM = [OPS_NAV[0], OPS_NAV[1], OPS_NAV[2], OPS_NAV[3], OPS_NAV[5]];
+const OPS_MORE   = [OPS_NAV[8], OPS_NAV[4], OPS_NAV[6], OPS_NAV[7], OPS_NAV[9]];
 
 type AppLayoutProps = {
   children: ReactNode;

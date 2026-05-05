@@ -158,25 +158,4 @@ export default defineSchema({
     .index("by_category", ["categoryId"])
     .index("by_deletedAt", ["deletedAt"]),
 
-  // Work Reports (Informes de Finalización)
-  workReports: defineTable({
-    quoteId: v.id("quotes"),
-    quoteName: v.string(),
-    clientName: v.string(),
-    projectName: v.optional(v.string()),
-    projectAddress: v.optional(v.string()),
-    serviceType: v.string(),
-    workDates: v.string(),
-    previousState: v.string(),
-    workSummary: v.string(),
-    photos: v.array(v.object({
-      storageId: v.id("_storage"),
-      caption: v.string(),
-      uploadedAt: v.string(),
-    })),
-    createdAt: v.string(),
-    deletedAt: v.optional(v.number()),
-  })
-    .index("by_quote", ["quoteId"])
-    .index("by_deletedAt", ["deletedAt"]),
 });

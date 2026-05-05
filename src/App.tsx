@@ -14,7 +14,7 @@ import ChangeStatusPage from "./pages/ChangeStatusPage.tsx";
 import DocumentsPage from "./pages/DocumentsPage.tsx";
 import PapeleraPage from "./pages/PapeleraPage.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
-import ReportsPage from "./pages/ReportsPage.tsx";
+
 import { useAuth } from "./auth/AuthContext.tsx";
 import { useServiceWorker } from "@/hooks/use-service-worker.ts";
 import { ErrorBoundary } from "./ErrorBoundary.tsx";
@@ -71,7 +71,7 @@ export default function App() {
           <Route path="/cambio-estado" element={<ProtectedRoute name="Cambio de Estado"><ChangeStatusPage /></ProtectedRoute>} />
           <Route path="/documentos" element={<ProtectedRoute name="Documentos de Empresa"><DocumentsPage /></ProtectedRoute>} />
           <Route path="/papelera" element={<ProtectedRoute name="Papelera de Reciclaje"><PapeleraPage /></ProtectedRoute>} />
-          <Route path="/informes" element={<ProtectedRoute name="Informes de Finalización"><ReportsPage /></ProtectedRoute>} />
+
 
           {/* RRHH */}
           <Route path="/rrhh/liquidacion" element={<ProtectedRoute name="Liquidación de Sueldos"><LiquidacionPage /></ProtectedRoute>} />
