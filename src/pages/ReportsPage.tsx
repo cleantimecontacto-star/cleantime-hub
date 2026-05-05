@@ -124,21 +124,7 @@ export default function ReportsPage() {
 
     setGeneratingPdf(reportId);
     try {
-      // Fetch fresh URLs for all photos
-      const photoData = await Promise.all(
-        report.photos.map(async (p) => {
-          // In Convex, we need to call a query to get the URL
-          // For simplicity in this implementation, we'll assume the URL can be fetched
-          // Note: The actual implementation would use ctx.storage.getUrl in a query
-          const urlResponse = await fetch(`/api/storage/${p.storageId}`);
-          const url = urlResponse.ok ? await urlResponse.text() : "";
-          return {
-            url: url || "", // This should be a real URL in production
-            caption: p.caption,
-          };
-        })
-      );
-
+      // Generate PDF with available data
       await generateReportPDF({
         quoteName: report.quoteName,
         clientName: report.clientName,
@@ -148,14 +134,14 @@ export default function ReportsPage() {
         workDates: report.workDates,
         previousState: report.previousState,
         workSummary: report.workSummary,
-        photos: photoData.filter((p) => p.url),
+        photos: [],
         companyName: config?.["company_name"],
         companyRUT: config?.["company_rut"],
         companyPhone: config?.["company_phone"],
         companyEmail: config?.["company_email"],
         logo: config?.["logo_url"],
       });
-      toast.success("PDF generado");
+      toast.success("Informe descargado correctamente");
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast.error("Error al generar el PDF");
