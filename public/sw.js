@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cleantime-v7';
+const CACHE_NAME = 'cleantime-v8';
 const urlsToCache = ['/', '/icon/icon-192.png', '/icon/icon-512.png'];
 
 self.addEventListener('install', (event) =>
