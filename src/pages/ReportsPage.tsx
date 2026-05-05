@@ -53,8 +53,6 @@ export default function ReportsPage() {
 
       const { storageId } = await response.json();
       
-      // In a real app, we'd get the URL from the storageId
-      // For the preview, we'll use a local URL
       const localUrl = URL.createObjectURL(file);
 
       setFormData((prev) => ({
@@ -108,8 +106,8 @@ export default function ReportsPage() {
       setSelectedQuoteId("");
       setFormData({
         workDates: "",
-        previousState: "",
-        workSummary: "",
+        previousState: "El lugar presentaba acumulación de suciedad, polvo y residuos. Se observaban manchas en pisos y paredes, requiriendo limpieza profunda y desinfección.",
+        workSummary: "Se realizó limpieza profunda de todos los espacios, incluyendo pisos, paredes, ventanas y superficies. Se aplicó desinfectante en áreas críticas. Se retiraron residuos y se dejó el lugar en perfectas condiciones de higiene.",
         photos: [],
       });
     } catch (error) {
@@ -124,7 +122,6 @@ export default function ReportsPage() {
 
     setGeneratingPdf(reportId);
     try {
-      // Generate PDF with available data
       await generateReportPDF({
         quoteName: report.quoteName,
         clientName: report.clientName,
@@ -285,44 +282,52 @@ export default function ReportsPage() {
         )}
 
         {/* List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           {reports.length === 0 ? (
-            <div className="col-span-full py-20 text-center border-2 border-dashed rounded-xl">
+            <div className="py-20 text-center border-2 border-dashed rounded-xl">
               <ImageIcon size={48} className="mx-auto text-muted-foreground/30 mb-4" />
               <p className="text-muted-foreground">Aún no hay informes creados.</p>
             </div>
           ) : (
             reports.map((report) => (
-              <Card key={report._id} className="p-4 flex items-center justify-between hover:border-primary/50 transition-colors group">
-                <div className="flex items-center gap-4">
-                  <div className="bg-primary/10 p-3 rounded-lg text-primary">
-                    <FileText size={24} />
+              <Card key={report._id} className="p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="bg-primary/10 p-2.5 rounded-lg text-primary shrink-0">
+                    <FileText size={20} />
                   </div>
-                  <div>
-                    <h3 className="font-bold leading-tight">{report.quoteName}</h3>
-                    <p className="text-xs text-muted-foreground">{report.clientName}</p>
-                    <p className="text-[10px] bg-secondary px-2 py-0.5 rounded-full mt-1 inline-block">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold truncate">{report.quoteName}</h3>
+                    <p className="text-sm text-muted-foreground truncate">{report.clientName}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
                       {report.photos.length} fotos • {report.workDates}
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-2 pt-2 border-t">
                   <Button 
-                    size="icon" 
-                    variant="ghost" 
-                    className="text-primary"
+                    className="flex-1 gap-2 h-10"
                     disabled={generatingPdf === report._id}
                     onClick={() => handleGeneratePDF(report._id as Id<"workReports">)}
                   >
-                    {generatingPdf === report._id ? <Loader2 className="animate-spin" size={18} /> : <Download size={18} />}
+                    {generatingPdf === report._id ? (
+                      <>
+                        <Loader2 className="animate-spin" size={16} />
+                        Generando...
+                      </>
+                    ) : (
+                      <>
+                        <Download size={16} />
+                        Descargar PDF
+                      </>
+                    )}
                   </Button>
                   <Button 
-                    size="icon" 
-                    variant="ghost" 
-                    className="text-destructive"
+                    variant="destructive" 
+                    className="gap-2 h-10"
                     onClick={() => deleteReport({ id: report._id as Id<"workReports"> })}
                   >
-                    <Trash2 size={18} />
+                    <Trash2 size={16} />
+                    <span className="hidden sm:inline">Eliminar</span>
                   </Button>
                 </div>
               </Card>
