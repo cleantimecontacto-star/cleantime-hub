@@ -21,8 +21,8 @@ export default function ReportsPage() {
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     workDates: "",
-    previousState: "",
-    workSummary: "",
+    previousState: "El lugar presentaba acumulación de suciedad, polvo y residuos. Se observaban manchas en pisos y paredes, requiriendo limpieza profunda y desinfección.",
+    workSummary: "Se realizó limpieza profunda de todos los espacios, incluyendo pisos, paredes, ventanas y superficies. Se aplicó desinfectante en áreas críticas. Se retiraron residuos y se dejó el lugar en perfectas condiciones de higiene.",
     photos: [] as Array<{ url: string; caption: string; storageId: string }>,
   });
   const [uploading, setUploading] = useState(false);
@@ -229,6 +229,7 @@ export default function ReportsPage() {
                     value={formData.previousState}
                     onChange={e => setFormData(f => ({ ...f, previousState: e.target.value }))}
                   />
+                  <p className="text-xs text-muted-foreground">Ejemplo: "El lugar presentaba acumulación de suciedad, polvo y residuos..."</p>
                 </div>
 
                 <div>
@@ -239,6 +240,7 @@ export default function ReportsPage() {
                     value={formData.workSummary}
                     onChange={e => setFormData(f => ({ ...f, workSummary: e.target.value }))}
                   />
+                  <p className="text-xs text-muted-foreground">Ejemplo: "Se realizó limpieza profunda de todos los espacios..."</p>
                 </div>
               </div>
 
