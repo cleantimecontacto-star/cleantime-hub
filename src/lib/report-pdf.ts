@@ -33,7 +33,6 @@ export async function generateReportPDF(data: ReportData) {
   // Color scheme
   const primaryColor = [33, 150, 243]; // Blue
   const textColor = [33, 33, 33]; // Dark gray
-  const lightGray = [245, 245, 245];
 
   // Helper function to add page if needed
   function checkPageBreak(spaceNeeded: number) {
@@ -53,18 +52,18 @@ export async function generateReportPDF(data: ReportData) {
     try {
       doc.addImage(data.logo, "PNG", margin, yPos, 30, 30);
     } catch (e) {
-      // Logo failed, continue without it
+      // Logo failed
     }
   }
 
   setTextColor(primaryColor);
   doc.setFontSize(20);
-  doc.setFont(undefined, "bold");
-  doc.text("INFORME DE FINALIZACIÓN DE TRABAJO", margin + 35, yPos + 8);
+  doc.setFont("helvetica", "bold");
+  doc.text("INFORME DE FINALIZACIÓN", margin + 35, yPos + 8);
 
   setTextColor(textColor);
   doc.setFontSize(10);
-  doc.setFont(undefined, "normal");
+  doc.setFont("helvetica", "normal");
   doc.text(`${data.companyName || ""}`, margin + 35, yPos + 16);
   if (data.companyRUT) doc.text(`RUT: ${data.companyRUT}`, margin + 35, yPos + 21);
 
@@ -74,13 +73,13 @@ export async function generateReportPDF(data: ReportData) {
   checkPageBreak(20);
   setTextColor(primaryColor);
   doc.setFontSize(12);
-  doc.setFont(undefined, "bold");
+  doc.setFont("helvetica", "bold");
   doc.text("INFORMACIÓN GENERAL", margin, yPos);
 
   yPos += 8;
   setTextColor(textColor);
   doc.setFontSize(10);
-  doc.setFont(undefined, "normal");
+  doc.setFont("helvetica", "normal");
 
   const infoLines = [
     `Cotización: ${data.quoteName}`,
@@ -101,13 +100,13 @@ export async function generateReportPDF(data: ReportData) {
   checkPageBreak(30);
   setTextColor(primaryColor);
   doc.setFontSize(12);
-  doc.setFont(undefined, "bold");
+  doc.setFont("helvetica", "bold");
   doc.text("ESTADO PREVIO A LOS TRABAJOS", margin, yPos);
 
   yPos += 8;
   setTextColor(textColor);
   doc.setFontSize(10);
-  doc.setFont(undefined, "normal");
+  doc.setFont("helvetica", "normal");
 
   const prevStateLines = doc.splitTextToSize(data.previousState, contentWidth - 5);
   doc.text(prevStateLines, margin + 2, yPos);
@@ -117,13 +116,13 @@ export async function generateReportPDF(data: ReportData) {
   checkPageBreak(30);
   setTextColor(primaryColor);
   doc.setFontSize(12);
-  doc.setFont(undefined, "bold");
+  doc.setFont("helvetica", "bold");
   doc.text("RESUMEN DE TRABAJOS REALIZADOS", margin, yPos);
 
   yPos += 8;
   setTextColor(textColor);
   doc.setFontSize(10);
-  doc.setFont(undefined, "normal");
+  doc.setFont("helvetica", "normal");
 
   const workSummaryLines = doc.splitTextToSize(data.workSummary, contentWidth - 5);
   doc.text(workSummaryLines, margin + 2, yPos);
@@ -134,7 +133,7 @@ export async function generateReportPDF(data: ReportData) {
     checkPageBreak(30);
     setTextColor(primaryColor);
     doc.setFontSize(12);
-    doc.setFont(undefined, "bold");
+    doc.setFont("helvetica", "bold");
     doc.text("REGISTRO FOTOGRÁFICO", margin, yPos);
 
     yPos += 10;
@@ -148,16 +147,8 @@ export async function generateReportPDF(data: ReportData) {
       // First photo (left)
       const photo1 = data.photos[i];
       try {
-        doc.addImage(
-          photo1.url,
-          "JPEG",
-          margin,
-          yPos,
-          photoWidth - 2,
-          photoHeight
-        );
+        doc.addImage(photo1.url, "JPEG", margin, yPos, photoWidth - 2, photoHeight);
       } catch (e) {
-        // Photo failed, draw placeholder
         doc.setDrawColor(200);
         doc.rect(margin, yPos, photoWidth - 2, photoHeight);
         doc.setFontSize(8);
@@ -169,25 +160,13 @@ export async function generateReportPDF(data: ReportData) {
       if (i + 1 < data.photos.length) {
         const photo2 = data.photos[i + 1];
         try {
-          doc.addImage(
-            photo2.url,
-            "JPEG",
-            margin + photoWidth + 2,
-            yPos,
-            photoWidth - 2,
-            photoHeight
-          );
+          doc.addImage(photo2.url, "JPEG", margin + photoWidth + 2, yPos, photoWidth - 2, photoHeight);
         } catch (e) {
-          // Photo failed, draw placeholder
           doc.setDrawColor(200);
           doc.rect(margin + photoWidth + 2, yPos, photoWidth - 2, photoHeight);
           doc.setFontSize(8);
           setTextColor([150, 150, 150]);
-          doc.text(
-            "Foto no disponible",
-            margin + photoWidth + 4,
-            yPos + photoHeight / 2
-          );
+          doc.text("Foto no disponible", margin + photoWidth + 4, yPos + photoHeight / 2);
         }
       }
 
@@ -196,40 +175,30 @@ export async function generateReportPDF(data: ReportData) {
       // Captions
       setTextColor(textColor);
       doc.setFontSize(9);
-      doc.setFont(undefined, "italic");
+      doc.setFont("helvetica", "italic");
 
-      const caption1Lines = doc.splitTextToSize(
-        photo1.caption,
-        photoWidth - 3
-      );
+      const caption1Lines = doc.splitTextToSize(photo1.caption, photoWidth - 3);
       doc.text(caption1Lines, margin + 1, yPos);
 
       if (i + 1 < data.photos.length) {
         const photo2 = data.photos[i + 1];
-        const caption2Lines = doc.splitTextToSize(
-          photo2.caption,
-          photoWidth - 3
-        );
+        const caption2Lines = doc.splitTextToSize(photo2.caption, photoWidth - 3);
         doc.text(caption2Lines, margin + photoWidth + 3, yPos);
       }
 
-      yPos += Math.max(
-        caption1Lines.length * 3.5,
-        i + 1 < data.photos.length
-          ? (doc.splitTextToSize(data.photos[i + 1].caption, photoWidth - 3))
-              .length * 3.5
-          : 0
+      const maxCaptionLines = Math.max(
+        caption1Lines.length,
+        i + 1 < data.photos.length ? doc.splitTextToSize(data.photos[i + 1].caption, photoWidth - 3).length : 0
       );
-      yPos += 5;
+      
+      yPos += maxCaptionLines * 3.5 + 5;
     }
   }
 
   // 6. Footer
-  yPos += 10;
-  checkPageBreak(15);
   setTextColor([150, 150, 150]);
   doc.setFontSize(8);
-  doc.setFont(undefined, "normal");
+  doc.setFont("helvetica", "normal");
   doc.text(
     `Generado el ${new Date().toLocaleDateString("es-CL")} a las ${new Date().toLocaleTimeString("es-CL")}`,
     margin,

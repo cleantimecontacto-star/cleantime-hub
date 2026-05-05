@@ -157,7 +157,6 @@ export default defineSchema({
   })
     .index("by_category", ["categoryId"])
     .index("by_deletedAt", ["deletedAt"]),
-});
 
   // Work Reports (Informes de Finalización)
   workReports: defineTable({
@@ -167,9 +166,9 @@ export default defineSchema({
     projectName: v.optional(v.string()),
     projectAddress: v.optional(v.string()),
     serviceType: v.string(),
-    workDates: v.string(), // "27, 28 y 29 de abril"
-    previousState: v.string(), // Descripción del estado previo
-    workSummary: v.string(), // Resumen de trabajos realizados
+    workDates: v.string(),
+    previousState: v.string(),
+    workSummary: v.string(),
     photos: v.array(v.object({
       storageId: v.id("_storage"),
       caption: v.string(),
