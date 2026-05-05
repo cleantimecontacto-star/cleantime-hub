@@ -63,8 +63,7 @@ export default function App() {
           <Route path="/cotizaciones" element={<ProtectedRoute name="Lista de Cotizaciones"><QuotesList /></ProtectedRoute>} />
           <Route path="/cotizaciones/nueva" element={<ProtectedRoute name="Formulario de Cotización"><QuoteForm /></ProtectedRoute>} />
           <Route path="/cotizaciones/:id" element={<ProtectedRoute name="Editar Cotización"><QuoteForm /></ProtectedRoute>} />
-          <Route path="/clientes" element={<ProtectedRoute name="Gestión de Clientes"><ClientsPage /></ProtectedRoute>} />
-          <Route path="/trabajadores" element={<ProtectedRoute name="Gestión de Trabajadores"><WorkersPage /></ProtectedRoute>} />
+      <Route path="/trabajadores" element={<ProtectedRoute name="Gestión de Trabajadores"><WorkersPage /></ProtectedRoute>} />
           <Route path="/gastos" element={<ProtectedRoute name="Gestión de Gastos"><ExpensesPage /></ProtectedRoute>} />
           <Route path="/exportar" element={<ProtectedRoute name="Exportación de Datos"><ExportPage /></ProtectedRoute>} />
           <Route path="/config" element={<ProtectedRoute name="Configuración"><ConfigPage /></ProtectedRoute>} />

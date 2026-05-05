@@ -9,41 +9,65 @@ export function useServiceWorker() {
     if (!("serviceWorker" in navigator)) return;
 
     const showUpdateToast = (waiting: ServiceWorker | null) => {
+      // Si ya se mostró el toast o no hay worker esperando, no hacer nada
       if (toastShown.current || !waiting) return;
+      
       toastShown.current = true;
       toast("✨ Nueva versión disponible", {
         description: "Actualizá para cargar la última versión.",
         duration: Infinity,
         action: {
           label: "Actualizar",
-          onClick: () => waiting.postMessage({ type: "SKIP_WAITING" }),
+          onClick: () => {
+            waiting.postMessage({ type: "SKIP_WAITING" });
+          },
         },
+        onDismiss: () => {
+          // Permitir que se vuelva a mostrar si se cierra manualmente y hay un nuevo intento
+          toastShown.current = false;
+        },
+        onAutoClose: () => {
+          toastShown.current = false;
+        }
       });
     };
 
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
+    const handleControllerChange = () => {
       if (reloadingRef.current) return;
       reloadingRef.current = true;
       window.location.reload();
-    });
+    };
+
+    navigator.serviceWorker.addEventListener("controllerchange", handleControllerChange);
 
     navigator.serviceWorker
       .register("/sw.js")
       .then((registration) => {
+        // 1. Verificar si ya hay un worker esperando al cargar
         if (registration.waiting) {
           showUpdateToast(registration.waiting);
-          return;
         }
-        registration.addEventListener("updatefound", () => {
+
+        // 2. Escuchar por nuevos workers que se instalen
+        const onUpdateFound = () => {
           const newWorker = registration.installing;
           if (!newWorker) return;
-          newWorker.addEventListener("statechange", () => {
+
+          const onStateChange = () => {
             if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-              showUpdateToast(registration.waiting ?? newWorker);
+              showUpdateToast(newWorker);
             }
-          });
-        });
+          };
+
+          newWorker.addEventListener("statechange", onStateChange);
+        };
+
+        registration.addEventListener("updatefound", onUpdateFound);
       })
       .catch((err) => console.log("Service Worker registration failed:", err));
+
+    return () => {
+      navigator.serviceWorker.removeEventListener("controllerchange", handleControllerChange);
+    };
   }, []);
 }

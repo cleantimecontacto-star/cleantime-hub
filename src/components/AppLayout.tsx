@@ -22,7 +22,6 @@ import {
   Building2,
   UserCog,
   Trash2,
-  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils.ts";
 import { useInstallPrompt } from "@/hooks/use-install-prompt.ts";
@@ -86,7 +85,7 @@ export default function AppLayout({ children, title, headerRight, module: mod }:
   const isRRHH = mod === "rrhh" || location.pathname.startsWith("/rrhh");
   const activeModule: Module = isRRHH ? "rrhh" : "operaciones";
   const NAV_ITEMS = isRRHH ? RRHH_NAV : OPS_NAV;
-  const BOTTOM_ITEMS = isRRHH ? RRHH_NAV : OPS_BOTTOM;
+  const BOTTOM_ITEMS = isRRHH ? (RRHH_NAV.length > 5 ? RRHH_NAV.slice(0, 5) : RRHH_NAV) : OPS_BOTTOM;
   const MORE_ITEMS   = isRRHH ? [] : OPS_MORE;
 
   function isActive(path: string) {
