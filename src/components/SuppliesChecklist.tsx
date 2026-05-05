@@ -6,22 +6,21 @@ import { Input } from '@/components/ui/input.tsx';
 type Supply = {
   id: string;
   nombre: string;
-  emoji: string;
   porTrabajador: number;
 };
 
 const DEFAULT_SUPPLIES: Supply[] = [
-  { id: 'escoba', nombre: 'Escoba', emoji: '🧹', porTrabajador: 1 },
-  { id: 'pala', nombre: 'Pala', emoji: '🪏', porTrabajador: 1 },
-  { id: 'mopa', nombre: 'Mopa', emoji: '🧹', porTrabajador: 1 },
-  { id: 'balde', nombre: 'Balde', emoji: '🪣', porTrabajador: 1 },
-  { id: 'espatula', nombre: 'Espátula', emoji: '🔪', porTrabajador: 1 },
-  { id: 'mascarilla', nombre: 'Mascarilla', emoji: '😷', porTrabajador: 1 },
-  { id: 'diluyente', nombre: 'Botella diluyente', emoji: '🧴', porTrabajador: 1 },
-  { id: 'bolsa-mopa', nombre: 'Bolsa de mopa', emoji: '🛍️', porTrabajador: 1 },
-  { id: 'bolsa-basura', nombre: 'Bolsa de basura', emoji: '🗑️', porTrabajador: 2 },
-  { id: 'guantes', nombre: 'Guantes', emoji: '🧤', porTrabajador: 1 },
-  { id: 'cepillo', nombre: 'Cepillo', emoji: '🪥', porTrabajador: 1 },
+  { id: 'escoba', nombre: 'Escoba', porTrabajador: 1 },
+  { id: 'pala', nombre: 'Pala', porTrabajador: 1 },
+  { id: 'mopa', nombre: 'Mopa', porTrabajador: 1 },
+  { id: 'balde', nombre: 'Balde', porTrabajador: 1 },
+  { id: 'espatula', nombre: 'Espátula', porTrabajador: 1 },
+  { id: 'mascarilla', nombre: 'Mascarilla', porTrabajador: 1 },
+  { id: 'diluyente', nombre: 'Botella diluyente', porTrabajador: 1 },
+  { id: 'bolsa-mopa', nombre: 'Bolsa de mopa', porTrabajador: 1 },
+  { id: 'bolsa-basura', nombre: 'Bolsa de basura', porTrabajador: 2 },
+  { id: 'guantes', nombre: 'Guantes', porTrabajador: 1 },
+  { id: 'cepillo', nombre: 'Cepillo', porTrabajador: 1 },
 ];
 
 const STORAGE_KEY = 'cleantime_supplies_checklist';
@@ -31,7 +30,14 @@ function loadSupplies(): Supply[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Migración: eliminar emojis si existen en el storage
+        return parsed.map((s: any) => ({
+          id: s.id,
+          nombre: s.nombre,
+          porTrabajador: s.porTrabajador
+        }));
+      }
     }
   } catch {
     // ignore
@@ -39,14 +45,13 @@ function loadSupplies(): Supply[] {
   return DEFAULT_SUPPLIES;
 }
 
-type EditState = { id: string; nombre: string; emoji: string; qty: number } | null;
+type EditState = { id: string; nombre: string; qty: number } | null;
 
 export function SuppliesChecklist({ defaultCount = 1 }: { defaultCount?: number }) {
   const [workerCount, setWorkerCount] = useState(Math.max(1, defaultCount));
   const [supplies, setSupplies] = useState<Supply[]>(loadSupplies);
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [newItem, setNewItem] = useState('');
-  const [newEmoji, setNewEmoji] = useState('📦');
   const [showAdd, setShowAdd] = useState(false);
   const [editState, setEditState] = useState<EditState>(null);
 
@@ -72,9 +77,8 @@ export function SuppliesChecklist({ defaultCount = 1 }: { defaultCount?: number 
     const name = newItem.trim();
     if (!name) return;
     const id = 'custom-' + Date.now();
-    setSupplies(s => [...s, { id, nombre: name, emoji: newEmoji.trim() || '📦', porTrabajador: 1 }]);
+    setSupplies(s => [...s, { id, nombre: name, porTrabajador: 1 }]);
     setNewItem('');
-    setNewEmoji('📦');
     setShowAdd(false);
   };
 
@@ -86,7 +90,7 @@ export function SuppliesChecklist({ defaultCount = 1 }: { defaultCount?: number 
   };
 
   const startEdit = (s: Supply) => {
-    setEditState({ id: s.id, nombre: s.nombre, emoji: s.emoji, qty: s.porTrabajador });
+    setEditState({ id: s.id, nombre: s.nombre, qty: s.porTrabajador });
   };
 
   const saveEdit = () => {
@@ -96,7 +100,7 @@ export function SuppliesChecklist({ defaultCount = 1 }: { defaultCount?: number 
     setSupplies(ss =>
       ss.map(x =>
         x.id === editState.id
-          ? { ...x, nombre, emoji: editState.emoji, porTrabajador: Math.max(1, editState.qty) }
+          ? { ...x, nombre, porTrabajador: Math.max(1, editState.qty) }
           : x
       )
     );
@@ -155,13 +159,6 @@ export function SuppliesChecklist({ defaultCount = 1 }: { defaultCount?: number 
               <div key={s.id} className="flex flex-col gap-1.5 px-2 py-2 rounded-md bg-muted/50 border">
                 <div className="flex items-center gap-1.5">
                   <Input
-                    value={editState.emoji}
-                    onChange={e => setEditState(es => es ? { ...es, emoji: e.target.value } : es)}
-                    className="h-7 w-12 text-center text-sm px-1"
-                    maxLength={2}
-                    placeholder="📦"
-                  />
-                  <Input
                     value={editState.nombre}
                     onChange={e => setEditState(es => es ? { ...es, nombre: e.target.value } : es)}
                     onKeyDown={e => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') setEditState(null); }}
@@ -213,7 +210,6 @@ export function SuppliesChecklist({ defaultCount = 1 }: { defaultCount?: number 
                 )}>
                   {done && <Check className="w-2.5 h-2.5 text-primary-foreground" />}
                 </span>
-                <span className="text-base leading-none">{s.emoji}</span>
                 <span className={cn('flex-1 text-xs', done && 'line-through text-muted-foreground')}>{s.nombre}</span>
                 <span className="text-[10px] text-muted-foreground shrink-0">x{qty}</span>
               </button>
@@ -243,19 +239,12 @@ export function SuppliesChecklist({ defaultCount = 1 }: { defaultCount?: number 
         {showAdd ? (
           <div className="flex items-center gap-1.5 px-2 py-1">
             <Input
-              value={newEmoji}
-              onChange={e => setNewEmoji(e.target.value)}
-              className="h-7 w-12 text-center text-sm px-1 shrink-0"
-              maxLength={2}
-              placeholder="📦"
-            />
-            <Input
               autoFocus
               value={newItem}
               onChange={e => setNewItem(e.target.value)}
               onKeyDown={e => {
                 if (e.key === 'Enter') addItem();
-                if (e.key === 'Escape') { setShowAdd(false); setNewEmoji('📦'); }
+                if (e.key === 'Escape') { setShowAdd(false); }
               }}
               placeholder="Nombre del insumo..."
               className="h-7 text-xs flex-1"
@@ -266,7 +255,7 @@ export function SuppliesChecklist({ defaultCount = 1 }: { defaultCount?: number 
             >
               OK
             </button>
-            <button onClick={() => { setShowAdd(false); setNewItem(''); setNewEmoji('📦'); }}
+            <button onClick={() => { setShowAdd(false); setNewItem(''); }}
               className="h-7 px-2 rounded hover:bg-muted text-xs text-muted-foreground"
             >
               X
