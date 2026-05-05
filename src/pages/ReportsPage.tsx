@@ -16,6 +16,7 @@ export default function ReportsPage() {
   const reports = useQuery((api as any).workReports.list) ?? [];
   const quotes = useQuery(api.quotes.list) ?? [];
   const config = useQuery(api.config.getAll);
+  const getPhotoUrl = useMutation((api as any).workReports.getPhotoUrl);
 
   const [selectedQuoteId, setSelectedQuoteId] = useState<string>("");
   const [showForm, setShowForm] = useState(false);
@@ -122,6 +123,25 @@ export default function ReportsPage() {
 
     setGeneratingPdf(reportId);
     try {
+      // Fetch photo URLs from Convex storage
+      const photosWithUrls = await Promise.all(
+        report.photos.map(async (photo) => {
+          try {
+            const url = await getPhotoUrl({ storageId: photo.storageId });
+            return {
+              url: url || "",
+              caption: photo.caption,
+            };
+          } catch {
+            return {
+              url: "",
+              caption: photo.caption,
+            };
+          }
+        })
+      );
+
+      // Generate PDF with photos
       await generateReportPDF({
         quoteName: report.quoteName,
         clientName: report.clientName,
@@ -131,7 +151,7 @@ export default function ReportsPage() {
         workDates: report.workDates,
         previousState: report.previousState,
         workSummary: report.workSummary,
-        photos: [],
+        photos: photosWithUrls,
         companyName: config?.["company_name"],
         companyRUT: config?.["company_rut"],
         companyPhone: config?.["company_phone"],

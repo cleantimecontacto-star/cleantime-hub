@@ -3,6 +3,7 @@ import jsPDF from "jspdf";
 interface Photo {
   url: string;
   caption: string;
+  storageId?: string;
 }
 
 interface ReportData {
@@ -130,68 +131,76 @@ export async function generateReportPDF(data: ReportData) {
 
   // 5. Photos (2 per row)
   if (data.photos && data.photos.length > 0) {
-    checkPageBreak(30);
-    setTextColor(primaryColor);
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("REGISTRO FOTOGRÁFICO", margin, yPos);
+    const validPhotos = data.photos.filter((p) => p.url && p.url.trim());
+    
+    if (validPhotos.length > 0) {
+      checkPageBreak(30);
+      setTextColor(primaryColor);
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("REGISTRO FOTOGRÁFICO", margin, yPos);
 
-    yPos += 10;
+      yPos += 10;
 
-    const photoWidth = (contentWidth - 5) / 2;
-    const photoHeight = 60;
+      const photoWidth = (contentWidth - 5) / 2;
+      const photoHeight = 60;
 
-    for (let i = 0; i < data.photos.length; i += 2) {
-      checkPageBreak(photoHeight + 25);
+      for (let i = 0; i < validPhotos.length; i += 2) {
+        checkPageBreak(photoHeight + 25);
 
-      // First photo (left)
-      const photo1 = data.photos[i];
-      try {
-        doc.addImage(photo1.url, "JPEG", margin, yPos, photoWidth - 2, photoHeight);
-      } catch (e) {
-        doc.setDrawColor(200);
-        doc.rect(margin, yPos, photoWidth - 2, photoHeight);
-        doc.setFontSize(8);
-        setTextColor([150, 150, 150]);
-        doc.text("Foto no disponible", margin + 2, yPos + photoHeight / 2);
-      }
-
-      // Second photo (right) if exists
-      if (i + 1 < data.photos.length) {
-        const photo2 = data.photos[i + 1];
+        // First photo (left)
+        const photo1 = validPhotos[i];
         try {
-          doc.addImage(photo2.url, "JPEG", margin + photoWidth + 2, yPos, photoWidth - 2, photoHeight);
+          if (photo1.url) {
+            doc.addImage(photo1.url, "JPEG", margin, yPos, photoWidth - 2, photoHeight);
+          }
         } catch (e) {
           doc.setDrawColor(200);
-          doc.rect(margin + photoWidth + 2, yPos, photoWidth - 2, photoHeight);
+          doc.rect(margin, yPos, photoWidth - 2, photoHeight);
           doc.setFontSize(8);
           setTextColor([150, 150, 150]);
-          doc.text("Foto no disponible", margin + photoWidth + 4, yPos + photoHeight / 2);
+          doc.text("Foto no disponible", margin + 2, yPos + photoHeight / 2);
         }
+
+        // Second photo (right) if exists
+        if (i + 1 < validPhotos.length) {
+          const photo2 = validPhotos[i + 1];
+          try {
+            if (photo2.url) {
+              doc.addImage(photo2.url, "JPEG", margin + photoWidth + 2, yPos, photoWidth - 2, photoHeight);
+            }
+          } catch (e) {
+            doc.setDrawColor(200);
+            doc.rect(margin + photoWidth + 2, yPos, photoWidth - 2, photoHeight);
+            doc.setFontSize(8);
+            setTextColor([150, 150, 150]);
+            doc.text("Foto no disponible", margin + photoWidth + 4, yPos + photoHeight / 2);
+          }
+        }
+
+        yPos += photoHeight + 5;
+
+        // Captions
+        setTextColor(textColor);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "italic");
+
+        const caption1Lines = doc.splitTextToSize(photo1.caption, photoWidth - 3);
+        doc.text(caption1Lines, margin + 1, yPos);
+
+        if (i + 1 < validPhotos.length) {
+          const photo2 = validPhotos[i + 1];
+          const caption2Lines = doc.splitTextToSize(photo2.caption, photoWidth - 3);
+          doc.text(caption2Lines, margin + photoWidth + 3, yPos);
+        }
+
+        const maxCaptionLines = Math.max(
+          caption1Lines.length,
+          i + 1 < validPhotos.length ? doc.splitTextToSize(validPhotos[i + 1].caption, photoWidth - 3).length : 0
+        );
+        
+        yPos += maxCaptionLines * 3.5 + 5;
       }
-
-      yPos += photoHeight + 5;
-
-      // Captions
-      setTextColor(textColor);
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "italic");
-
-      const caption1Lines = doc.splitTextToSize(photo1.caption, photoWidth - 3);
-      doc.text(caption1Lines, margin + 1, yPos);
-
-      if (i + 1 < data.photos.length) {
-        const photo2 = data.photos[i + 1];
-        const caption2Lines = doc.splitTextToSize(photo2.caption, photoWidth - 3);
-        doc.text(caption2Lines, margin + photoWidth + 3, yPos);
-      }
-
-      const maxCaptionLines = Math.max(
-        caption1Lines.length,
-        i + 1 < data.photos.length ? doc.splitTextToSize(data.photos[i + 1].caption, photoWidth - 3).length : 0
-      );
-      
-      yPos += maxCaptionLines * 3.5 + 5;
     }
   }
 
