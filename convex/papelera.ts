@@ -70,11 +70,14 @@ export const list = query({
         });
 
         if (deleted.length > 0) {
+          const tipo = tipoFromTable(table);
           allDeletedItems.push(
             ...deleted.map((item: any) => ({
               ...item,
-              pid: `${table}:${item._id}`,
-              tipo: tipoFromTable(table),
+              // FIXED: pid usa el tipo en español ("cliente", "proyecto", etc.)
+              // para que parsePid() en el frontend haga match con los switch cases.
+              pid: `${tipo}:${item._id}`,
+              tipo,
               resumen:
                 item.name ||
                 item.number ||
